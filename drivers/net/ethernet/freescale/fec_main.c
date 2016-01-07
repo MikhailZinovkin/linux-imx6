@@ -1156,25 +1156,18 @@ fec_enet_hwtstamp(struct fec_enet_private *fep, unsigned ts,
 	hwtstamps->hwtstamp = ns_to_ktime(ns);
 }
 
-static void
-fec_enet_tx_queue(struct net_device *ndev, u16 queue_id)
+static void fec_txq(struct net_device *ndev, struct fec_enet_private *fep,
+		    struct fec_enet_priv_tx_q *txq)
 {
-	struct	fec_enet_private *fep;
 	struct bufdesc *bdp;
 	unsigned short status;
 	struct	sk_buff	*skb;
-	struct fec_enet_priv_tx_q *txq;
 	struct netdev_queue *nq;
 	int	index = 0;
 	int	entries_free;
 
-	fep = netdev_priv(ndev);
-
-	queue_id = FEC_ENET_GET_QUQUE(queue_id);
-
-	txq = fep->tx_queue[queue_id];
 	/* get next bdp of dirty_tx */
-	nq = netdev_get_tx_queue(ndev, queue_id);
+	nq = netdev_get_tx_queue(ndev, txq->bd.qid);
 	bdp = txq->dirty_tx;
 
 	/* get next bdp of dirty_tx */
@@ -1268,11 +1261,13 @@ static void
 fec_enet_tx(struct net_device *ndev)
 {
 	struct fec_enet_private *fep = netdev_priv(ndev);
+	struct fec_enet_priv_tx_q *txq;
 	u16 queue_id;
 	/* First process class A queue, then Class B and Best Effort queue */
 	for_each_set_bit(queue_id, &fep->work_tx, FEC_ENET_MAX_TX_QS) {
 		clear_bit(queue_id, &fep->work_tx);
-		fec_enet_tx_queue(ndev, queue_id);
+		txq = fep->tx_queue[FEC_ENET_GET_QUQUE(queue_id)];
+		fec_txq(ndev, fep, txq);
 	}
 	return;
 }
