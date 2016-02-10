@@ -992,6 +992,7 @@ sdhci_esdhc_imx_probe_dt(struct platform_device *pdev,
 		}
 		gpio_direction_output(boarddata->power_gpio, 0);
 	}
+	boarddata->en_gpio = of_get_named_gpio(np, "en-gpios", 0);
 
 	of_property_read_u32(np, "bus-width", &boarddata->max_bus_width);
 
@@ -1175,6 +1176,17 @@ static int sdhci_esdhc_imx_probe(struct platform_device *pdev)
 
 	case ESDHC_CD_NONE:
 		break;
+	}
+
+	/* enable_gpio */
+	if (gpio_is_valid(boarddata->en_gpio)){
+		err = mmc_gpio_set_en(host->mmc, boarddata->en_gpio);
+		if (err) {
+			dev_err(mmc_dev(host->mmc),
+				"failed to request enable gpio!\n");
+			goto disable_clk;
+		}
+
 	}
 
 	switch (boarddata->max_bus_width) {

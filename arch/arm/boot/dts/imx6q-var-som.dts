@@ -1,4 +1,7 @@
 /*
+ * Copyright (C) 2014 Variscite, Ltd. All Rights Reserved
+ * Donio Ron: ron.d@variscite.com
+ *
  * Copyright 2012 Freescale Semiconductor, Inc.
  * Copyright 2011 Linaro Ltd.
  *
@@ -12,18 +15,14 @@
 
 /dts-v1/;
 
+#define VAR_SOM_MX6
+
 #include "imx6q.dtsi"
-#include "imx6qdl-sabresd.dtsi"
+#include "imx6qdl-var-som.dtsi"
 
 / {
 	model = "Freescale i.MX6 Quad SABRE Smart Device Board";
-	compatible = "fsl,imx6q-sabresd", "fsl,imx6q";
-};
-
-&battery {
-	offset-charger = <1900>;
-	offset-discharger = <1694>;
-	offset-usb-charger = <1685>;
+	compatible = "fsl,imx6q-var-som", "fsl,imx6q";
 };
 
 &i2c2 {
@@ -56,31 +55,26 @@
 			};
 
 			sw3a_reg: sw3a {
-				regulator-min-microvolt = <400000>;
-				regulator-max-microvolt = <1975000>;
+				regulator-min-microvolt = <800000>;
+				regulator-max-microvolt = <3950000>;
 				regulator-boot-on;
 				regulator-always-on;
 			};
 
 			sw3b_reg: sw3b {
-				regulator-min-microvolt = <400000>;
-				regulator-max-microvolt = <1975000>;
+				regulator-min-microvolt = <800000>;
+				regulator-max-microvolt = <3950000>;
 				regulator-boot-on;
 				regulator-always-on;
 			};
 
 			sw4_reg: sw4 {
 				regulator-min-microvolt = <800000>;
-				regulator-max-microvolt = <3300000>;
-			};
-
-			swbst_reg: swbst {
-				regulator-min-microvolt = <5000000>;
-				regulator-max-microvolt = <5150000>;
+				regulator-max-microvolt = <3950000>;
 			};
 
 			snvs_reg: vsnvs {
-				regulator-min-microvolt = <1000000>;
+				regulator-min-microvolt = <1200000>;
 				regulator-max-microvolt = <3000000>;
 				regulator-boot-on;
 				regulator-always-on;
@@ -104,24 +98,29 @@
 			vgen3_reg: vgen3 {
 				regulator-min-microvolt = <1800000>;
 				regulator-max-microvolt = <3300000>;
+				regulator-always-on;
+				regulator-boot-on;
 			};
 
 			vgen4_reg: vgen4 {
 				regulator-min-microvolt = <1800000>;
 				regulator-max-microvolt = <3300000>;
 				regulator-always-on;
+				regulator-boot-on;
 			};
 
 			vgen5_reg: vgen5 {
 				regulator-min-microvolt = <1800000>;
 				regulator-max-microvolt = <3300000>;
 				regulator-always-on;
+				regulator-boot-on;
 			};
 
 			vgen6_reg: vgen6 {
-				regulator-min-microvolt = <1800000>;
+				regulator-min-microvolt = <3300000>;
 				regulator-max-microvolt = <3300000>;
 				regulator-always-on;
+				regulator-boot-on;
 			};
 		};
 	};
