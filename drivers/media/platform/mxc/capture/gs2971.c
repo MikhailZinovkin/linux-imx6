@@ -887,7 +887,7 @@ static int ioctl_g_ifparm(struct v4l2_int_device *s, struct v4l2_ifparm *p)
 		 * EAV/SAV codes, not 8
 		 */
 		p->if_type = V4L2_IF_TYPE_BT1120_PROGRESSIVE_SDR;
-		p->u.bt656.mode = V4L2_IF_TYPE_BT656_MODE_BT_8BIT;
+		p->u.bt656.mode = V4L2_IF_TYPE_BT656_MODE_BT_10BIT;
 #if 1 //orig
 		p->u.bt656.bt_sync_correct = 0;	// Use embedded sync
 		p->u.bt656.nobt_vs_inv = 1;
