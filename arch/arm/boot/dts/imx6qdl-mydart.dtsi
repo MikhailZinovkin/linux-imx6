@@ -93,7 +93,7 @@
 		enable-active-high;
 	};
 
-#if 1
+#if 0
 	gpio-keys {
 		compatible = "gpio-keys";
 		power {
@@ -253,7 +253,7 @@
 	pu-supply = <&pu_dummy>; /* use pu_dummy if VDDSOC share with VDDPU */
 };
 
-
+#if 0
 &ecspi3 {
 	fsl,spi-num-chipselects = <1>;
 	cs-gpios = <&gpio4 24 0>;
@@ -283,6 +283,7 @@
 		linux,wakeup;
 		};
 };
+#endif
 
 &fec {
 	pinctrl-names = "default";
@@ -301,6 +302,14 @@
 	pu-supply = <&pu_dummy>; /* ldo-bypass:use pu_dummy if VDDSOC share with VDDPU */
 };
 
+&wdog1 {
+	status = "disabled";
+};
+
+&wdog2 {
+	status = "okay";
+};
+
 &gpu {
 	pu-supply = <&pu_dummy>; /* ldo-bypass:use pu_dummy if VDDSOC share with VDDPU */
 };
@@ -311,7 +320,7 @@
 
 &hdmi_core {
 	ipu_id = <0>;
-	disp_id = <0>;
+	disp_id = <1>;
 	status = "okay";
 };
 
@@ -327,14 +336,21 @@
 	pinctrl-0 = <&pinctrl_i2c1_2>;
 	status = "okay";
 
+	hdmi: edid@50 {
+		compatible = "fsl,imx6-hdmi-i2c";
+		reg = <0x50>;
+	};
+
 	ov5640_mipi: ov5640_mipi@3c {
 		compatible = "ovti,ov5640_mipi";
 		reg = <0x3c>;
 		clocks = <&clks 200>;
 		clock-names = "csi_mclk";
-//		DOVDD-supply = <&vgen4_reg>; /* 1.8v */
-//		AVDD-supply = <&vgen3_reg>;  /* 2.8v, rev C board is VGEN3 rev B board is VGEN5 */
-//		DVDD-supply = <&vgen2_reg>;  /* 1.5v*/
+#if 0
+		DOVDD-supply = <&vgen4_reg>; /* 1.8v */
+		AVDD-supply = <&vgen3_reg>;  /* 2.8v, rev C board is VGEN3 rev B board is VGEN5 */
+		DVDD-supply = <&vgen2_reg>;  /* 1.5v*/
+#endif
 		pwn-gpios = <&gpio3 13 1>;
 		rst-gpios = <&gpio4 10 0>;
 		csi_id = <1>;
@@ -349,12 +365,12 @@
 	pinctrl-names = "default";
 	pinctrl-0 = <&pinctrl_i2c2_2>;
 	status = "okay";
-
+#if 0
 	hdmi: edid@50 {
 		compatible = "fsl,imx6-hdmi-i2c";
 		reg = <0x50>;
 	};
-
+#endif
 	codec: tlv320aic3x@1b {
 		compatible = "ti,tlv320aic3x";
 		reg = <0x1b>;
@@ -364,7 +380,7 @@
 		DVDD-supply = <&reg_audio>;
 		AVDD-supply = <&reg_audio>;
 		DRVDD-supply = <&reg_audio>;
-		gpio-reset = <&gpio1 0 1>;
+		gpio-reset = <&gpio4 5 1>;
 		gpio-cfg = <
 			0x0000 /* 0:Default */
 			0x0000 /* 1:Default */
@@ -382,14 +398,36 @@
         pinctrl-0 = <&pinctrl_i2c3_3>;
         status = "okay";
 
-	ctw6120_tsc@38 {
-		compatible = "fsl,ctw6120-tsc";
-		reg = <0x38>;
-		interrupt-parent = <&gpio3>;
-		interrupts = <7 0>;
-
-		x-size = <800>;
-		y-size = <480>;
+	ft5x06_ts@38 {
+			compatible = "focaltech,5x06";
+			reg = <0x38>;
+			focaltech,family-id = <0x54>;
+			interrupt-parent = <&gpio1>;
+			interrupts = <4 0>;
+			vdd-supply = <&touch_3v3_regulator>;
+			vcc_i2c-supply = <&touch_3v3_regulator>;
+			focaltech,irq-gpio = <&gpio1 4 0x00>;
+			focaltech,display-coords = <0 0 800 480>;
+			focaltech,name = "ft6x06";
+			focaltech,no-force-update;
+			focaltech,group-id = <1>;
+			focaltech,hard-reset-delay-ms = <20>;
+			focaltech,soft-reset-delay-ms = <150>;
+			focaltech,num-max-touches = <2>;
+			focaltech,fw-name = "ft_8610_qrd_fw.bin";
+			focaltech,fw-delay-aa-ms = <100>;
+			focaltech,fw-delay-55-ms = <30>;
+			focaltech,fw-upgrade-id1 = <0x79>;
+			focaltech,fw-upgrade-id2 = <0x08>;
+			focaltech,fw-delay-readid-ms = <10>;
+			focaltech,fw-delay-era-flsh-ms = <2000>;
+			focaltech,fw-auto-cal;
+			focaltech,mirror_h;
+			focaltech,mirror_v;
+		};
+        rtc@0x68 {
+                 compatible = "dallas,ds1307";
+                 reg = <0x68>;
 	};
 };
 
@@ -400,7 +438,7 @@
 	hog {
 		pinctrl_hog_1: hoggrp-1 {
 			fsl,pins = <
-#if 1
+#if 0
 				 /* User Button */
 				MX6QDL_PAD_CSI0_DATA_EN__GPIO5_IO20 		0x80000000
 				/* Backlight PWM */
@@ -428,6 +466,7 @@
 				MX6QDL_PAD_GPIO_3__CCM_CLKO2			0x130b0			/* Camera MCLK */
 			>;
 		};
+#if 0
 		pinctrl_pcie: pciegrp {
 			fsl,pins = <
 				/* PCIE */
@@ -437,11 +476,13 @@
 				MX6QDL_PAD_SD4_DAT4__GPIO2_IO12			0x80000000		/* PCIE_PWR_ENA */ 
 			>;
 		};
+
 		pinctrl_usbotg_var: usbotggrp-3 {
 			fsl,pins = <
 				MX6QDL_PAD_GPIO_4__GPIO1_IO04 0x17059
 			>;
 		};
+#endif
 		pinctrl_ecspi2: ecspi2grp {
 				fsl,pins = <
 					MX6QDL_PAD_DISP0_DAT17__ECSPI2_MISO	0x100b1
@@ -514,13 +555,69 @@
 };
 
 &ldb {
-	ipu_id = <1>;
-	disp_id = <0>;
-	ext_ref = <1>;
-	mode = "sep0";
-	sec_ipu_id = <1>;
-	sec_disp_id = <1>;
 	status = "okay";
+
+	lvds-channel@0 {
+		fsl,data-mapping = "spwg";
+		fsl,data-width = <24>;
+
+		status = "okay";
+
+/* Resistive Display */
+	display-timings {
+			native-mode = <&timingr0>;
+			timingr0: hsd100pxn1 {
+				clock-frequency = <35714000>;
+				hactive = <800>;
+				vactive = <480>;
+				hback-porch = <28>;
+				hfront-porch = <17>;
+				vback-porch = <13>;
+				vfront-porch = <20>;
+				hsync-len = <20>;
+				vsync-len = <13>;
+			};
+		};
+		
+/* Capacitive Display */
+		display-timings-alternate {
+			native-mode = <&timing0c>;
+			timing0c: hsd100pxn1 {
+				clock-frequency = <32000000>;
+				hactive = <800>;
+				vactive = <480>;
+				hback-porch = <39>;
+				hfront-porch = <39>;
+				vback-porch = <29>;
+				vfront-porch = <13>;
+				hsync-len = <47>;
+				vsync-len = <2>;
+			};
+		};
+	};
+
+	lvds-channel@1 {
+		fsl,data-mapping = "spwg";
+		fsl,data-width = <18>;
+		crtc = "ipu1-di1";
+		primary;
+		status = "okay";
+
+		display-timings {
+			native-mode = <&timing1>;
+			timing1: hsd100pxn1 {
+				clock-frequency = <35714000>;
+				hactive = <800>;
+				vactive = <480>;
+				hback-porch = <28>;
+				hfront-porch = <17>;
+				vback-porch = <13>;
+				vfront-porch = <20>;
+				hsync-len = <20>;
+				vsync-len = <13>;
+			};
+		};
+	};
 };
 
 &mipi_csi {
@@ -531,22 +628,37 @@
 	lanes = <2>;
 };
 
-&pcie {
-	pinctrl-0 = <&pinctrl_pcie>;
-	power-on-gpio = <&gpio2 12 0>;		/* gpio pin number of power-enable signal */
-	reset-gpio    = <&gpio5 13 0>;		/* gpio pin number of power good signal */
-	wake-up-gpio  = <&gpio3 22 1>;		/* gpio pin number of incoming wakeup signal */
- 	disable-gpio  = <&gpio3 21 0>;		/* gpio pin number of outgoing rfkill/endpoint disable signal */
+&dcic1 {
+	dcic_id = <0>;
+	dcic_mux = "dcic-hdmi";
 	status = "okay";
 };
 
-#if 0
-&pwm1 {
+&dcic2 {
+	dcic_id = <1>;
+	dcic_mux = "dcic-lvds0";
+	status = "okay";
+};
+
+&pcie {
+	reset-gpio    = <&gpio4 11 0>;		/* gpio pin number of power good signal */
+	wake-up-gpio  = <&gpio4 31 1>;		/* gpio pin number of incoming wakeup signal */
+ 	disable-gpio  = <&gpio5 5 0>;		/* gpio pin number of outgoing rfkill/endpoint disable signal */
+	status = "okay";
+};
+
+
+&pwm2 {
 	pinctrl-names = "default";
 	pinctrl-0 = <&pinctrl_pwm1_1>;
 	status = "okay";
 };
-#endif
+
+&pwm4 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_pwm4_1>;
+	status = "okay";
+};
 
 &ssi2 {
 	fsl,mode = "i2s-slave";
@@ -637,19 +749,8 @@
 	status = "okay";
 };
 
-
-
 &usdhc1 {	/* uSDHC1, TiWi wl1271 7 Wilink8 WL18xx*/
 	pinctrl-names = "default", "state_100mhz", "state_200mhz";
-
-
-
-
-
-
-
-
-
 	pinctrl-0 = <&pinctrl_usdhc1_1>;
 	pinctrl-1 = <&pinctrl_usdhc1_2_100mhz>;
 	pinctrl-2 = <&pinctrl_usdhc1_2_200mhz>;
@@ -659,20 +760,6 @@
 	enable-sdio-wakeup;
 	vmmc-supply = <&wlan_en_reg>;        
 	non-removable;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 	cap-power-off-card;
 	status = "okay";
 };

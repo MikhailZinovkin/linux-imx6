@@ -21,7 +21,7 @@
 #include "imx6qdl-mydart.dtsi"
 
 / {
-	model = "Freescale i.MX6 Quad SABRE Smart Device Board";
+	model = "Freescale i.MX6 Quad MY_DART Device Board";
 	compatible = "fsl,imx6q-mydart", "fsl,imx6q";
 };
 
@@ -86,6 +86,7 @@
 			};
 
 #if 0
+//Not used in Dart
 			vgen1_reg: vgen1 {
 				regulator-min-microvolt = <800000>;
 				regulator-max-microvolt = <1550000>;
@@ -95,14 +96,7 @@
 				regulator-min-microvolt = <800000>;
 				regulator-max-microvolt = <1550000>;
 			};
-#endif
-			vgen3_reg: vgen3 {
-				regulator-min-microvolt = <1800000>;
-				regulator-max-microvolt = <3300000>;
-				regulator-always-on;
-				regulator-boot-on;
-			};
-#if 0
+
 			vgen4_reg: vgen4 {
 				regulator-min-microvolt = <1800000>;
 				regulator-max-microvolt = <3300000>;
@@ -117,6 +111,13 @@
 				regulator-boot-on;
 			};
 #endif
+			vgen3_reg: vgen3 {
+				regulator-min-microvolt = <1800000>;
+				regulator-max-microvolt = <1800000>;
+				regulator-always-on;
+				regulator-boot-on;
+			};
+
 			vgen6_reg: vgen6 {
 				regulator-min-microvolt = <3300000>;
 				regulator-max-microvolt = <3300000>;
@@ -124,6 +125,16 @@
 				regulator-boot-on;
 			};
 		};
+	};
+};
+
+&ldb {
+	lvds-channel@0 {
+		crtc = "ipu1-di0";
+	};
+
+	lvds-channel@1 {
+		crtc = "ipu2-di0";
 	};
 };
 
@@ -144,7 +155,7 @@
 };
 
 &sata {
-	status = "okay";
+	status = "disabled";
 };
 
 &gs2971 {
