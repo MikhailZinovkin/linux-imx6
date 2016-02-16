@@ -200,3 +200,16 @@
 	ipu_id = <1>;
 };
 
+
+&ov5640_mipi {
+	ipu_id = <1>;
+	csi_id = <0>;
+};
+
+/* ov5640_mipi, tc358743_mipi */
+&v4l2_cap_1 {
+	ipu_id = <1>;
+	csi_id = <0>;
+	mipi_camera = <1>;
+};
+
