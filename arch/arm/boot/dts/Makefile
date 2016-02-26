@@ -123,7 +123,6 @@ dtb-$(CONFIG_ARCH_MXC) += \
 	imx6dl-sabreauto-flexcan1.dtb \
 	imx6dl-sabreauto-gpmi-weim.dtb \
 	imx6dl-sabresd.dtb \
-	imx6dl-sabresd-enetirq.dtb \
 	imx6dl-sabresd-hdcp.dtb \
 	imx6dl-sabresd-ldo.dtb \
 	imx6dl-sabresd-pf200.dtb \
@@ -138,13 +137,18 @@ dtb-$(CONFIG_ARCH_MXC) += \
 	imx6q-nitrogen6x-hdmi-input.dtb \
 	imx6q-nitrogen6x-nolcd.dtb \
 	imx6q-sabreauto.dtb \
+	imx6q-var-som.dtb \
+	imx6q-var-dart.dtb \
+	imx6dl-var-som.dtb \
+	imx6dl-var-som-solo.dtb \
+	imx6dl-var-som-solo-vsc.dtb \
+	imx6q-var-som-vsc.dtb\
 	imx6q-sabreauto-ecspi.dtb \
 	imx6q-sabreauto-flexcan1.dtb \
 	imx6q-sabreauto-gpmi-weim.dtb \
 	imx6q-sabrelite.dtb \
 	imx6q-sabrelite-nolcd.dtb \
 	imx6q-sabresd.dtb \
-	imx6q-sabresd-enetirq.dtb \
 	imx6q-sabresd-uart.dtb \
 	imx6q-sabresd-hdcp.dtb \
 	imx6q-sabresd-ldo.dtb \
