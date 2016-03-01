@@ -45,23 +45,6 @@
 		clocks = <&clks IMX7D_CLKO2_ROOT_DIV>;
 	};
 
-	i2cmux@2 {
-		compatible = "i2c-mux-gpio";
-		pinctrl-names = "default";
-		pinctrl-0 = <&pinctrl_i2c2mux>;
-		#address-cells = <1>;
-		#size-cells = <0>;
-		mux-gpios = <&gpio1 7 GPIO_ACTIVE_HIGH>;
-		i2c-parent = <&i2c2>;
-		idle-state = <0>;
-
-		i2c2a: i2c2@1 {
-			reg = <1>;
-			#address-cells = <1>;
-			#size-cells = <0>;
-		};
-	};
-
 	pxp_v4l2_out {
 		compatible = "fsl,imx7d-pxp-v4l2", "fsl,imx6sx-pxp-v4l2", "fsl,imx6sl-pxp-v4l2";
 		status = "okay";
@@ -381,16 +364,6 @@
 	pinctrl-0 = <&pinctrl_i2c2>;
 	status = "okay";
 
-	rv4162@68 {
-		compatible = "mcrystal,rv4162";
-		pinctrl-names = "default";
-		pinctrl-0 = <&pinctrl_i2c2_rv4162>;
-		reg = <0x68>;
-		interrupts-extended = <&gpio2 15 IRQ_TYPE_LEVEL_LOW>;
-	};
-};
-
-&i2c2a {
 	ov5640_mipi: ov5640_mipi@3c {
 		compatible = "ovti,ov5640_mipisubdev";
 		reg = <0x3c>;
@@ -412,6 +385,14 @@
 				remote-endpoint = <&mipi_sensor_ep>;
 			};
 		};
+	};
+
+	rv4162@68 {
+		compatible = "mcrystal,rv4162";
+		pinctrl-names = "default";
+		pinctrl-0 = <&pinctrl_i2c2_rv4162>;
+		reg = <0x68>;
+		interrupts-extended = <&gpio2 15 IRQ_TYPE_LEVEL_LOW>;
 	};
 };
 
@@ -828,12 +809,7 @@
 				MX7D_PAD_GPIO1_IO02__GPIO1_IO2	0x7d /* Slow clock, can't get slow enough */
 				MX7D_PAD_GPIO1_IO03__GPIO1_IO3	0x7d /* ENET INT */
 #endif
-			>;
-		};
-
-		pinctrl_i2c2mux: i2c2muxgrp {
-			fsl,pins = <
-				MX7D_PAD_GPIO1_IO07__GPIO1_IO7	0x7d
+				MX7D_PAD_GPIO1_IO07__GPIO1_IO7	0x7d /* J9 pin 3 */
 			>;
 		};
 
