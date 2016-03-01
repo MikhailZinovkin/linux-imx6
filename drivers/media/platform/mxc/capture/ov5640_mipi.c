@@ -2909,6 +2909,7 @@ static int ov5640_init_mode(enum ov5640_frame_rate frame_rate,
 	OV5640_get_light_freq();
 	OV5640_set_bandingfilter();
 	ov5640_set_virtual_channel(ov5640_data.virtual_channel);
+	ov5640_write_reg(0x3a00, 0x78);
 
 	/* add delay to wait for sensor stable */
 	if (mode == ov5640_mode_QSXGA_2592_1944) {
