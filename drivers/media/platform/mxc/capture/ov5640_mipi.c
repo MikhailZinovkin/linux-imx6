@@ -39,6 +39,9 @@
 #include <media/v4l2-int-device.h>
 #include "mxc_v4l2_capture.h"
 
+#include <linux/proc_fs.h>
+#include <linux/seq_file.h>
+
 #define OV5640_VOLTAGE_ANALOG               2800000
 #define OV5640_VOLTAGE_DIGITAL_CORE         1500000
 #define OV5640_VOLTAGE_DIGITAL_IO           1800000
@@ -2122,6 +2125,59 @@ static s32 ov5640_read_reg(u16 reg, u8 *val)
 	pr_debug("%s(mipi):reg=%x,val=%x\n", __func__, reg, buf[0]);
 	return buf[0];
 }
+//----------------------------------------------------------------------------
+#define __AEC_AGC_ADDR    0x3500
+#define __AEC_AGC_REGNUM  0x0D
+struct proc_dir_entry *proc_file_entry;	
+
+//----------------------------------------------------------------------------
+//ssize_t (*read) (struct file *, char __user *, size_t, loff_t *);
+static int ov5640_read_proc(struct seq_file *seq, void *v)
+{
+	//nn struct i2c_client *client = (struct i2c_client *)seq->private;
+// 	int len = 0;
+ 	u16 regnum = 0;
+    static int cnt =0;
+ 	//int status =0;
+ 	//u16 regval;
+	//u16 regvals[__AEC_AGC_REGNUM];
+	int i;
+	u8  temp;
+	int tmp;
+	
+	seq_printf(seq,"\nReg Read:\n");
+	seq_printf(seq, "%6d:    0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F\n", cnt++ );
+	
+	for (regnum=0;  regnum < __AEC_AGC_REGNUM; ) {
+		seq_printf(seq, "%#4x:  ", __AEC_AGC_ADDR + regnum);
+		for (i = 0;
+		     i < 16  && regnum < __AEC_AGC_REGNUM;
+		     i++, regnum++) {
+				tmp = ov5640_read_reg(__AEC_AGC_ADDR + regnum, &temp);
+				if (tmp < 0) 
+				  seq_printf(seq, " er");
+				else 
+				  seq_printf(seq, " %02x", temp);
+		}
+		seq_printf(seq,"\n");
+	}
+
+	return 0;
+}
+
+static int ov5640_proc_open(struct inode *inode, struct  file *file) {
+  return single_open(file, ov5640_read_proc, PDE_DATA(inode));
+}
+
+static const struct file_operations wl_proc_fops = {
+  .owner = THIS_MODULE,
+  .open = ov5640_proc_open,
+  .read = seq_read,
+  .llseek = seq_lseek,
+  .release = single_release,  
+};
+
+//----------------------------------------------------------------------------
 
 static int prev_sysclk, prev_HTS;
 static int AE_low, AE_high, AE_Target = 52;
@@ -2481,6 +2537,7 @@ static int ov5640_change_mode_exposure_calc(enum ov5640_frame_rate frame_rate,
 	long cap_gain16_shutter;
 	int retval = 0;
 
+	pr_info("========= %s:\n", __func__);
 	/* check if the input mode and frame rate is valid */
 	pModeSetting =
 		ov5640_mode_info_data[frame_rate][mode].init_data_ptr;
@@ -2592,6 +2649,9 @@ static int ov5640_change_mode_exposure_calc(enum ov5640_frame_rate frame_rate,
 
 	OV5640_stream_on();
 
+	//d pr_info("======== %s(mipi): Try set AeAg: \n", __func__);
+	//d OV5640_turn_on_AE_AG(1); //myaddon
+
 err:
 	return retval;
 }
@@ -2606,6 +2666,7 @@ static int ov5640_change_mode_direct(enum ov5640_frame_rate frame_rate,
 	s32 ArySize = 0;
 	int retval = 0;
 
+	pr_info("========= %s:\n", __func__);
 	/* check if the input mode and frame rate is valid */
 	pModeSetting =
 		ov5640_mode_info_data[frame_rate][mode].init_data_ptr;
@@ -2643,6 +2704,7 @@ static int ov5640_download_autofocus(void)
 {
 	u8  r;
 	int sval = ov5640_read_reg(0x3000, &r);
+	pr_info("========= %s:\n", __func__);
 	if (0 > sval) {
 		pr_err("%s(mipi):Error reading control reg\n",
 		       __func__);
@@ -2751,9 +2813,12 @@ static int ov5640_init_mode(enum ov5640_frame_rate frame_rate,
 	else
 		pr_err("currently this sensor format can not be supported!\n");
 
+	pr_info("1========= %s: frame_rate= %d, mode = %d\n", __func__, frame_rate, mode);
 	dn_mode = ov5640_mode_info_data[frame_rate][mode].dn_mode;
 	orig_dn_mode = ov5640_mode_info_data[frame_rate][orig_mode].dn_mode;
+	pr_info("2========= %s: dn_mode = %d, orig_dn_mode = %d\n", __func__, dn_mode, orig_dn_mode);
 	if (mode == ov5640_mode_INIT) {
+		pr_info("3========= %s: ov5640_mode_INIT=%d",  __func__, ov5640_mode_INIT);
 		pModeSetting = ov5640_init_setting_30fps_VGA;
 		ArySize = ARRAY_SIZE(ov5640_init_setting_30fps_VGA);
 
@@ -2779,6 +2844,7 @@ static int ov5640_init_mode(enum ov5640_frame_rate frame_rate,
 			(dn_mode == SCALING && orig_dn_mode == SUBSAMPLING)) {
 		/* change between subsampling and scaling
 		 * go through exposure calucation */
+		pr_info("4========= %s: frame_rate= %d, mode = %d\n", __func__, frame_rate, mode);
 		retval = ov5640_change_mode_exposure_calc(frame_rate, mode);
 	} else {
 		/* change inside subsampling or scaling
@@ -3488,6 +3554,14 @@ static int ov5640_probe(struct i2c_client *client,
 	retval = v4l2_int_device_register(&ov5640_int_device);
 
 //	clk_disable_unprepare(ov5640_data.sensor_clk);
+
+#ifndef __USE_PROC_ENTRY
+#define __PROC_ENTRY_NAME 		"ov5640-regs"
+
+	proc_file_entry = proc_create_data(__PROC_ENTRY_NAME, 0644, NULL, &wl_proc_fops, NULL);
+	if( proc_file_entry == NULL )  return -ENOMEM;
+#endif
+
 
 	pr_info("camera ov5640_mipi is found\n");
 	return retval;
