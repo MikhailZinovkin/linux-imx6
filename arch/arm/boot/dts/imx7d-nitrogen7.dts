@@ -251,12 +251,7 @@
 		ethphy0: ethernet-phy@4 {
 			compatible = "ethernet-phy-ieee802.3-c22";
 			reg = <4>;
-#define SWAP_GPIO2_3
-#ifdef SWAP_GPIO2_3
 			interrupts-extended = <&gpio1 2 IRQ_TYPE_LEVEL_LOW>;
-#else
-			interrupts-extended = <&gpio1 3 IRQ_TYPE_LEVEL_LOW>;
-#endif
 		};
 	};
 };
@@ -810,13 +805,8 @@
 	imx7d-nitrogen7 {
 		pinctrl_hog_2: hoggrp-2 {
 			fsl,pins = <
-#ifdef SWAP_GPIO2_3
 				MX7D_PAD_GPIO1_IO02__GPIO1_IO2	0x7d /* ENET INT */
 				MX7D_PAD_GPIO1_IO03__CCM_CLKO2	0x7d /* Slow clock */
-#else
-				MX7D_PAD_GPIO1_IO02__GPIO1_IO2	0x7d /* Slow clock, can't get slow enough */
-				MX7D_PAD_GPIO1_IO03__GPIO1_IO3	0x7d /* ENET INT */
-#endif
 			>;
 		};
 
