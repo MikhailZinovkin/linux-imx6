@@ -2126,8 +2126,12 @@ static s32 ov5640_read_reg(u16 reg, u8 *val)
 	return buf[0];
 }
 //----------------------------------------------------------------------------
-#define __AEC_AGC_ADDR    0x3500
-#define __AEC_AGC_REGNUM  0x0D
+#define __AEC_AGC_ADDR    		0x3500
+#define __AEC_AGC_REGNUM  		0x0E
+#define __TIMING_CNTR_ADDR    	0x3800
+#define __TIMING_CNTR_REGNUM  	0x22
+#define __STROBE_CNTR_ADDR    	0x3A00
+#define __STROBE_CNTR_REGNUM  	0x26
 struct proc_dir_entry *proc_file_entry;	
 
 //----------------------------------------------------------------------------
@@ -2154,6 +2158,38 @@ static int ov5640_read_proc(struct seq_file *seq, void *v)
 		     i < 16  && regnum < __AEC_AGC_REGNUM;
 		     i++, regnum++) {
 				tmp = ov5640_read_reg(__AEC_AGC_ADDR + regnum, &temp);
+				if (tmp < 0) 
+				  seq_printf(seq, " er");
+				else 
+				  seq_printf(seq, " %02x", temp);
+		}
+		seq_printf(seq,"\n");
+	}
+	//seq_printf(seq,"\nReg Read:\n");
+	//seq_printf(seq, "%6d:    0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F\n", cnt++ );
+	
+	for (regnum=0;  regnum < __TIMING_CNTR_REGNUM; ) {
+		seq_printf(seq, "%#4x:  ", __TIMING_CNTR_ADDR + regnum);
+		for (i = 0;
+		     i < 16  && regnum < __TIMING_CNTR_REGNUM;
+		     i++, regnum++) {
+				tmp = ov5640_read_reg(__TIMING_CNTR_ADDR + regnum, &temp);
+				if (tmp < 0) 
+				  seq_printf(seq, " er");
+				else 
+				  seq_printf(seq, " %02x", temp);
+		}
+		seq_printf(seq,"\n");
+	}
+	//seq_printf(seq,"\nReg Read:\n");
+	//seq_printf(seq, "%6d:    0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F\n", cnt++ );
+	
+	for (regnum=0;  regnum < __STROBE_CNTR_REGNUM; ) {
+		seq_printf(seq, "%#4x:  ", __STROBE_CNTR_ADDR + regnum);
+		for (i = 0;
+		     i < 16  && regnum < __STROBE_CNTR_REGNUM;
+		     i++, regnum++) {
+				tmp = ov5640_read_reg(__STROBE_CNTR_ADDR + regnum, &temp);
 				if (tmp < 0) 
 				  seq_printf(seq, " er");
 				else 
@@ -2191,6 +2227,17 @@ void OV5640_stream_off(void)
 {
 	ov5640_write_reg(0x4202, 0x0f);
 }
+
+void 
+ov5640_print_freeze(int line)
+{
+	int tmp;
+	u8 temp;
+
+	tmp = ov5640_read_reg(0x3a00, &temp);
+	pr_info("%d: 0x3a00[]=%02x\n", line, temp);
+}
+
 
 static const int sclk_rdiv_map[] = {1, 2, 4, 8};
 
@@ -2423,6 +2470,9 @@ void OV5640_set_bandingfilter(void)
 
 	max_band50 = (int)((prev_VTS-4)/band_step50);
 	ov5640_write_reg(0x3a0e, max_band50);
+	pr_info("====== %s: prev_sysclk=%d prev_HTS=%d prev_VTS=%d\n", __func__, prev_sysclk, prev_HTS, prev_VTS);
+	pr_info("====== %s: band_step50=%x band_step60=%x\n", __func__, band_step50, band_step60);
+
 }
 
 int OV5640_set_AE_target(int target)
