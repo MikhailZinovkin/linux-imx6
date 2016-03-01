@@ -83,37 +83,28 @@
 			enable-active-high;
 		};
 
-		reg_can2_3v3: regulator@2 {
-			compatible = "regulator-fixed";
-			reg = <2>;
-			regulator-name = "can2-3v3";
-			regulator-min-microvolt = <3300000>;
-			regulator-max-microvolt = <3300000>;
-			gpio = <&gpio2 14 GPIO_ACTIVE_LOW>;
-		};
-
-		reg_vref_1v8: regulator@3 {
+		reg_vref_1v8: regulator@2 {
 			compatible = "regulator-fixed";
 			regulator-name = "vref-1v8";
 			regulator-min-microvolt = <1800000>;
 			regulator-max-microvolt = <1800000>;
 		};
 
-		reg_vref_2v5: regulator@4 {
+		reg_vref_2v5: regulator@3 {
 			compatible = "regulator-fixed";
 			regulator-name = "vref-2v5";
 			regulator-min-microvolt = <2500000>;
 			regulator-max-microvolt = <2500000>;
 		};
 
-		reg_vref_3v3: regulator@5 {
+		reg_vref_3v3: regulator@4 {
 			compatible = "regulator-fixed";
 			regulator-name = "vref-3v3";
 			regulator-min-microvolt = <3300000>;
 			regulator-max-microvolt = <3300000>;
 		};
 
-		reg_wlan: regulator@7 {
+		reg_wlan: regulator@5 {
 			compatible = "regulator-fixed";
 			regulator-min-microvolt = <3300000>;
 			regulator-max-microvolt = <3300000>;
@@ -259,7 +250,7 @@
 &flexcan2 {
 	pinctrl-names = "default";
 	pinctrl-0 = <&pinctrl_flexcan2>;
-	xceiver-supply = <&reg_can2_3v3>;
+	trx-stby-gpio = <&gpio2 14 GPIO_ACTIVE_HIGH>;
 	status = "okay";
 };
 
