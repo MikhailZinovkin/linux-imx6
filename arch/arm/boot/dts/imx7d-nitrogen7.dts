@@ -27,7 +27,15 @@
 		reg = <0x80000000 0x40000000>;
 	};
 
-	backlight {
+	backlight_j9 {
+		compatible = "gpio-backlight";
+		pinctrl-names = "default";
+		pinctrl-0 = <&pinctrl_backlight_j9>;
+		gpios = <&gpio1 7 GPIO_ACTIVE_HIGH>;
+		default-on;
+	};
+
+	backlight_j20 {
 		compatible = "pwm-backlight";
 		pwms = <&pwm1 0 5000000>;
 		brightness-levels = <0 4 8 16 32 64 128 255>;
@@ -809,6 +817,11 @@
 				MX7D_PAD_GPIO1_IO02__GPIO1_IO2	0x7d /* Slow clock, can't get slow enough */
 				MX7D_PAD_GPIO1_IO03__GPIO1_IO3	0x7d /* ENET INT */
 #endif
+			>;
+		};
+
+		pinctrl_backlight_j9: backlightj9grp {
+			fsl,pins = <
 				MX7D_PAD_GPIO1_IO07__GPIO1_IO7	0x7d /* J9 pin 3 */
 			>;
 		};
