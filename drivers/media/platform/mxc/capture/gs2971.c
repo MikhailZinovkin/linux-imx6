@@ -22,6 +22,8 @@
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+#define DEBUG
+
 /*!
  * @file gs2971.c
  *
@@ -44,6 +46,7 @@
 #include <media/v4l2-int-device.h>
 #include "mxc_v4l2_capture.h"
 #include <linux/proc_fs.h>
+#include <linux/seq_file.h>
 
 #include "gs2971.h"
 
@@ -53,6 +56,9 @@
 static int debug = 0;
 module_param(debug, int, 0644);
 MODULE_PARM_DESC(debug, "Debug level (0-2)");
+
+#define __PROC_ENTRY_NAME 		"gs2971-regs"
+//#define GS2971_ENABLE_ANCILLARY_DATA
 
 static struct gs2971_spidata *spidata;
 
@@ -140,7 +146,7 @@ int gs2971_read_register(struct spi_device *spi, u16 offset, u16 * value)
 	}
 
 	if (status)
-		pr_err(">> Read register(%d) (%x): %x, %x\n", status, offset,
+		pr_err(">> !!Err: Read register(%d) (%x): %x, %x\n", status, offset,
 		       txbuf[0], rxbuf[0]);
 
 	pr_debug("--> Read register (%x) with value: %x", offset, *value);
@@ -190,6 +196,80 @@ int gs2971_write_register(struct spi_device *spi, u16 offset, u16 value)
 	pr_debug("--> Writing to address (%x) : %x\n", offset, value);
 	return gs2971_write_buffer(spi, offset, &value, 1);
 }
+
+#define __GS2971_REGNUM  0x86
+struct proc_dir_entry *proc_file_entry;	
+
+//----------------------------------------------------------------------------
+//ssize_t (*read) (struct file *, char __user *, size_t, loff_t *);
+static int gs2971_read_proc(struct seq_file *seq, void *v) 
+{
+#if 1
+	struct spi_device *spi = (struct spi_device *)seq->private;
+// 	int len = 0;
+ 	unsigned int regnum = 0;
+    static int cnt =0;
+ 	int status =0;
+ 	u16 regval;
+	u16 regvals[__GS2971_REGNUM];
+	int i;
+	
+#if 1 //__VER1
+	seq_printf(seq,"\nReg Read:\n");
+	seq_printf(seq, "%9d:      0    1    2    3    4    5    6    7    8    9    A    B    C    D    E    F\n", cnt++ );
+	
+	for (regnum=0;  regnum < __GS2971_REGNUM; ) {
+		seq_printf(seq, "%03d(%#4x):  ", regnum, regnum);
+		for (i = 0;
+		     i < 16  && regnum < __GS2971_REGNUM;
+		     i++, regnum++) {
+				//int gs2971_read_register(struct spi_device *spi, u16 offset, u16 * value)
+				 status = gs2971_read_register(spi, regnum, &regval);
+				 if (status) regval=0xDED;
+				 
+				seq_printf(seq, " %04x", regval);
+		}
+		seq_printf(seq,"\n");
+	}
+#else
+	//int gs2971_read_buffer(struct spi_device *spi, u16 offset, u16 * values, int length)
+	gs2971_read_buffer(spi, 0, regvals, __GS2971_REGNUM);
+	
+	seq_printf(seq,"\nBuf Read:\n");
+	seq_printf(seq, "%9d:      0    1    2    3    4    5    6    7    8    9    A    B    C    D    E    F\n", cnt++ );
+	
+	for (regnum=0; regnum < __GS2971_REGNUM; ) {
+		seq_printf(seq, "%03d(%#4x):  ", regnum, regnum);
+		for (i = 0;
+		     i < 16  && regnum < __GS2971_REGNUM;
+		     i++, regnum++) {
+				seq_printf(seq, " %04x", regvals[regnum]);
+		}
+		seq_printf(seq,"\n");
+	}
+#endif
+
+	return 0;
+#else
+	seq_printf(seq, "Hello proc!\n");
+	return 0;
+#endif
+}
+
+static int gs2971_proc_open(struct inode *inode, struct  file *file) {
+  return single_open(file, gs2971_read_proc, PDE_DATA(inode));
+}
+
+static const struct file_operations wl_proc_fops = {
+  .owner = THIS_MODULE,
+  .open = gs2971_proc_open,
+  .read = seq_read,
+  .llseek = seq_lseek,
+  .release = single_release,  
+};
+
+//----------------------------------------------------------------------------
+
 const char *gpio_names[] = {
 [GPIO_STANDBY] = "standby-gpios",
 [GPIO_RESET] = "rst-gpios",
@@ -436,6 +516,12 @@ static int get_std(struct v4l2_int_device *s, v4l2_std_id * id)
 		}
 	} else if (!interlaced_flag && 1124 <= lines_per_frame_value
 		   && lines_per_frame_value <= 1125) {
+#if 1 //ena my shift
+		if (gs->cea861) {
+			sensor->spix.left = 150; // 220-20;
+			sensor->spix.top = 40;
+		}
+#endif
 		sensor->pix.width = 1920;
 		sensor->pix.height = 1080;
 		gs->mode = gs2971_mode_1080p;
@@ -448,12 +534,17 @@ static int get_std(struct v4l2_int_device *s, v4l2_std_id * id)
 			pr_debug("--> V4L2_STD_1080P_25\n");
 			*id = YUV_FORMAT(gs);
 		} else {
-			pr_debug("--> V4L2_STD_1080P_60\n");
+			pr_debug("--> V4L2_STD_1080P_30\n");
 			*id = YUV_FORMAT(gs);
 		}
 	} else if (interlaced_flag && 1124 <= lines_per_frame_value
 		   && lines_per_frame_value <= 1125) {
-
+#if 1 //ena my shift
+		if (gs->cea861) {
+			sensor->spix.left = 150;
+			sensor->spix.top = 40;
+		}
+#endif
 		sensor->pix.width = 1920;
 		sensor->pix.height = 1080;
 		if (words_per_line_value >= 2200 + 440) {
@@ -610,29 +701,29 @@ static int gs2971_init_ancillary(struct spi_device *spi)
 	/* Set up ancillary data filtering */
 	if (!status)
 		status =
-		    gs2971_write_register(spi, GS2971_REG_ANC_TYPE1, 0x4100);
+		    gs2971_write_register(spi, GS2971_ANC_TYPE_1_AP1, 0x4100);
 	/*  SMPTE-352M Payload ID (0x4101) */
 	if (!status)
-		status = gs2971_write_register(spi, GS2971_REG_ANC_TYPE2, 0x5f00);	/* Placeholder */
+		status = gs2971_write_register(spi, GS2971_ANC_TYPE_2_AP1, 0x5f00);	/* Placeholder */
 
 	if (!status)
-		status = gs2971_write_register(spi, GS2971_REG_ANC_TYPE3, 0x6000);	/* Placeholder */
+		status = gs2971_write_register(spi, GS2971_ANC_TYPE_3_AP1, 0x6000);	/* Placeholder */
 
 	if (!status)
 		status =
-		    gs2971_write_register(spi, GS2971_REG_ANC_TYPE4, 0x6100);
+		    gs2971_write_register(spi, GS2971_ANC_TYPE_4_AP1, 0x6100);
 	/* SMPTE 334 - SDID 01=EIA-708, 02=EIA-608 */
 
 	if (!status)
 		status =
-		    gs2971_write_register(spi, GS2971_REG_ANC_TYPE5, 0x6200);
+		    gs2971_write_register(spi, GS2971_ANC_TYPE_5_AP1, 0x6200);
 	/* SMPTE 334 - SDID 01=Program description, 02=Data broadcast, 03=VBI data */
 
-	if (0 == gs2971_read_register(spi, GS2971_REG_ANC_TYPE1, &value)) {
+	if (0 == gs2971_read_register(spi, GS2971_ANC_TYPE_1_AP1, &value)) {
 		dev_dbg(&spi->dev, "REG_ANC_TYPE1 value x%04x\n",
 			(unsigned int)value);
 	}
-	if (0 == gs2971_read_register(spi, GS2971_REG_ANC_TYPE2, &value)) {
+	if (0 == gs2971_read_register(spi, GS2971_ANC_TYPE_2_AP1, &value)) {
 		dev_dbg(&spi->dev, "REG_ANC_TYPE2 value x%04x\n",
 			(unsigned int)value);
 	}
@@ -661,7 +752,11 @@ static int gs2971_initialize(struct gs2971_priv *gs, struct spi_device *spi)
 	int retry = 0;
 	u16 value;
 
+#if 1 //orig
 	u16 cfg = GS_VCFG1_861_PIN_DISABLE_MASK;
+#else
+	u16 cfg = 0;
+#endif
 
 	if (gs->cea861)
 		cfg |= GS_VCFG1_TIMING_861_MASK;
@@ -704,7 +799,12 @@ static int gs2971_initialize(struct gs2971_priv *gs, struct spi_device *spi)
 		return status;
 
 	status =
+#if 1 //orig
 	    gs2971_write_register(spi, GS2971_TIM_861_CFG, GS_TIMCFG_TRS_861);
+#else
+	    gs2971_write_register(spi, GS2971_TIM_861_CFG, 0 /*GS_TIMCFG_TRS_861*/);
+	    //gs2971_write_register(spi, GS2971_TIM_861_CFG, /*GS_TIMCFG_TRS_861 |*/ GS_TIMCFG_HSYNC_INVERT | GS_TIMCFG_VSYNC_INVERT);
+#endif
 	if (status)
 		return status;
 
@@ -768,10 +868,17 @@ static int ioctl_g_ifparm(struct v4l2_int_device *s, struct v4l2_ifparm *p)
 	p->u.bt656.clock_curr = sensor->mclk;
 	if (gs->cea861) {
 		p->if_type = V4L2_IF_TYPE_BT656;	/* This is the only possibility. */
-		p->u.bt656.mode = V4L2_IF_TYPE_BT656_MODE_NOBT_10BIT;
+		p->u.bt656.mode = V4L2_IF_TYPE_BT656_MODE_NOBT_8BIT;
 		p->u.bt656.bt_sync_correct = 1;
+#if 0 //orig
 //      	p->u.bt656.nobt_vs_inv = 1;
 		p->u.bt656.nobt_hs_inv = 1;
+#else
+      	p->u.bt656.nobt_vs_inv = 0;
+ 		p->u.bt656.nobt_hs_inv = 0;
+		pr_debug("-> noinv hs\n");
+#endif
+		pr_debug("-> set for cea861=1 %s\n", __func__);
 	} else {
 		/*
 		 * p->if_type = V4L2_IF_TYPE_BT656_PROGRESSIVE;
@@ -781,9 +888,16 @@ static int ioctl_g_ifparm(struct v4l2_int_device *s, struct v4l2_ifparm *p)
 		 */
 		p->if_type = V4L2_IF_TYPE_BT1120_PROGRESSIVE_SDR;
 		p->u.bt656.mode = V4L2_IF_TYPE_BT656_MODE_BT_10BIT;
+#if 1 //orig
 		p->u.bt656.bt_sync_correct = 0;	// Use embedded sync
 		p->u.bt656.nobt_vs_inv = 1;
 //		p->u.bt656.nobt_hs_inv = 1;
+#else
+		p->u.bt656.bt_sync_correct = 0;	// Use embedded sync
+		p->u.bt656.nobt_vs_inv = 1;
+		p->u.bt656.nobt_hs_inv = 0;
+#endif
+		pr_debug("-> set for cea861=0 %s\n", __func__);
 	}
 	p->u.bt656.latch_clk_inv = 0;	/* pixel clk polarity */
 	p->u.bt656.clock_min = 6000000;
@@ -1268,6 +1382,7 @@ static int gs2971_probe(struct spi_device *spi)
 		dev_err(dev, "csi missing or invalid\n");
 		goto exit;
 	}
+	pr_info("%s:csi=%d\n", __func__, sensor->csi);
 
 	ret = of_property_read_u32(dev->of_node, "cea861", &gs->cea861);
 	if (ret) {
@@ -1314,6 +1429,11 @@ static int gs2971_probe(struct spi_device *spi)
 	if (ret)
 		goto exit;
 	power_control(gs, 0);
+	
+#ifndef __USE_PROC_ENTRY
+	proc_file_entry = proc_create_data(__PROC_ENTRY_NAME, 0644, NULL, &wl_proc_fops, spi);
+	if( proc_file_entry == NULL )  return -ENOMEM;
+#endif
 
 	ret = v4l2_int_device_register(&gs2971_int_device);
  exit:
@@ -1381,6 +1501,8 @@ static int __init gs2971_init(void)
 static void __exit gs2971_exit(void)
 {
 	pr_debug("-> In function %s\n", __func__);
+	
+	remove_proc_entry(__PROC_ENTRY_NAME, NULL);
 
 	spi_unregister_driver(&gs2971_spi);
 }
