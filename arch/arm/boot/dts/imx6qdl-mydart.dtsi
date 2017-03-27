@@ -241,6 +241,12 @@
 		gpios = <&gpio6 18 0>;
 	};
 
+	tca6408_reset: tca6408-reset {
+		compatible = "gpio-reset";
+		reset-gpios = <&gpio4 18 GPIO_ACTIVE_LOW>;
+		reset-delay-us = <1>;
+		#reset-cells = <0>;
+	};
 
 #if 0
 	lvds_cabc_ctrl {
@@ -367,6 +373,13 @@
 		mclk_source = <0>;
 	};
 
+	tca6408: gpio@20 {
+		compatible = "ti,tca6408";
+		reg = <0x20>;
+		gpio-controller;
+		#gpio-cells = <2>;
+		resets = <&tca6408_reset>;
+	};
 };
 
 &i2c2 {
