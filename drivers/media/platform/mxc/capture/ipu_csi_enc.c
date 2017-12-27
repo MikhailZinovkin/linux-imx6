@@ -19,6 +19,11 @@
  * @ingroup IPU
  */
 
+//#define DEBUG
+//#define CAMERA_DBG
+
+#define DEBUG
+#define CAMERA_DEBUG
 #include <linux/module.h>
 #include <linux/platform_device.h>
 #include <linux/dma-mapping.h>
@@ -31,6 +36,13 @@
 	#define CAMERA_TRACE(x) (printk)x
 #else
 	#define CAMERA_TRACE(x)
+#endif
+
+#if 0
+#undef dev_dbg
+#define dev_dbg(dev, format, arg...) {dev_printk(KERN_ERR, dev, format, ##arg);}
+#undef pr_debug
+#define pr_debug(fmt, ...) printk(KERN_ERR pr_fmt(fmt), ##__VA_ARGS__)
 #endif
 
 /*

@@ -15,7 +15,7 @@
  * with this program; if not, write to the Free Software Foundation, Inc.,
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
-
+#define DEBUG
 #include <linux/module.h>
 #include <linux/types.h>
 #include <linux/interrupt.h>
@@ -36,6 +36,14 @@
 #include <linux/mipi_csi2.h>
 
 #include "mxc_mipi_csi2.h"
+
+
+#if 1
+#undef dev_dbg
+#define dev_dbg(dev, format, arg...) {dev_printk(KERN_ERR, dev, format, ##arg);}
+#undef pr_debug
+#define pr_debug(fmt, ...) printk(KERN_ERR pr_fmt(fmt), ##__VA_ARGS__)
+#endif
 
 static struct mipi_csi2_info *gmipi_csi2;
 
@@ -290,7 +298,10 @@ int mipi_csi2_reset(struct mipi_csi2_info *info)
 	mipi_csi2_write(info, 0x00000002, MIPI_CSI2_PHY_TST_CTRL0);
 	mipi_csi2_write(info, 0x00010044, MIPI_CSI2_PHY_TST_CTRL1);
 	mipi_csi2_write(info, 0x00000000, MIPI_CSI2_PHY_TST_CTRL0);
-	mipi_csi2_write(info, 0x00000014, MIPI_CSI2_PHY_TST_CTRL1);
+	//mipi_csi2_write(info, 0x00000014, MIPI_CSI2_PHY_TST_CTRL1);
+
+	mipi_csi2_write(info, 0x0000000C, MIPI_CSI2_PHY_TST_CTRL1); // Clock 400-450MHz pal prog*/
+	//mipi_csi2_write(info, 0x00000026, MIPI_CSI2_PHY_TST_CTRL1);
 	mipi_csi2_write(info, 0x00000002, MIPI_CSI2_PHY_TST_CTRL0);
 	mipi_csi2_write(info, 0x00000000, MIPI_CSI2_PHY_TST_CTRL0);
 

@@ -11,6 +11,7 @@
  * http://www.gnu.org/copyleft/gpl.html
  */
 
+//#define DEBUG
 /*!
  * @file drivers/media/video/mxc/capture/mxc_v4l2_capture.c
  *
@@ -48,6 +49,13 @@
 #include "ipu_prp_sw.h"
 
 #define init_MUTEX(sem)         sema_init(sem, 1)
+
+#if 0
+#undef dev_dbg
+#define dev_dbg(dev, format, arg...) {dev_printk(KERN_ERR, dev, format, ##arg);}
+#undef pr_debug
+#define pr_debug(fmt, ...) printk(KERN_ERR pr_fmt(fmt), ##__VA_ARGS__)
+#endif
 
 static struct platform_device_id imx_v4l2_devtype[] = {
 	{
@@ -189,7 +197,7 @@ static video_fmt_t video_fmts[] = {
 	 .raw_height = 525,		/* SENS_FRM_HEIGHT */
 	 .active_width = 720,		/* ACT_FRM_WIDTH */
 	 .active_height = 480,		/* ACT_FRM_HEIGHT */
-	 .active_top = 0,
+	 .active_top = 13,
 	 .active_left = 0,
 	 },
 	{			/*! (B, G, H, I, N) PAL */
@@ -1393,6 +1401,7 @@ void setup_ifparm(cam_data *cam, int init_defrect)
 	 * the cropping boundary(except for tvin module).
 	 */
 	if (cam->device_type != 1) {
+		pr_debug("CAM DEVICE TYPE 1\n");
 		cam->crop_current.width = cam->crop_bounds.width;
 		cam->crop_current.height = cam->crop_bounds.height;
 	}
@@ -1418,6 +1427,8 @@ void setup_ifparm(cam_data *cam, int init_defrect)
 		pr_debug("End of %s: crop_current widthxheight %d x %d\n", __func__,
 			cam->crop_current.width, cam->crop_current.height);
 	}
+
+
 	swidth = cam->crop_current.width;
 	sheight = cam->crop_current.height;
 	sleft = 0;
@@ -1431,6 +1442,15 @@ void setup_ifparm(cam_data *cam, int init_defrect)
 		sleft =  cam_fmt.fmt.spix.left;
 		stop =  cam_fmt.fmt.spix.top;
 	}
+	pr_debug("On Calling IPU CSI WINDOWS SIZE CROP\n");
+	pr_debug("swidth= %d\n", swidth);
+	pr_debug("sheight= %d\n", sheight);
+	pr_debug("cam->crop_current.height= %d\n", cam->crop_current.height);
+	pr_debug("sleft= %d\n", sleft);
+	pr_debug("cam->crop_current.left= %d\n", cam->crop_current.left);
+	pr_debug("stop= %d\n", stop);
+	pr_debug("cam->crop_current.top= %d\n", cam->crop_current.top);
+ 
 	/* This essentially loses the data at the left and bottom of the image
 	 * giving a digital zoom image, if crop_current is less than the full
 	 * size of the image. */
@@ -1455,7 +1475,10 @@ void setup_ifparm(cam_data *cam, int init_defrect)
  */
 static int mxc_v4l2_s_param(cam_data *cam, struct v4l2_streamparm *parm)
 {
+	struct v4l2_ifparm ifparm;
+	struct v4l2_format cam_fmt;
 	struct v4l2_streamparm currentparm;
+	ipu_csi_signal_cfg_t csi_param;
 	u32 current_fps, parm_fps;
 	int err = 0;
 
@@ -1504,8 +1527,61 @@ static int mxc_v4l2_s_param(cam_data *cam, struct v4l2_streamparm *parm)
 	/* If resolution changed, need to re-program the CSI */
 	/* Get new values. */
 	setup_ifparm(cam, 0);
+	/*vidioc_int_g_ifparm(cam->sensor, &ifparm);
+	
+	csi_param.data_width = 0;
+	csi_param.clk_mode = 0;
+	csi_param.ext_vsync = 0;   
+	csi_param.Vsync_pol = 0;
+	csi_param.Hsync_pol = 0;
+	csi_param.pixclk_pol = 0;       
+	csi_param.data_pol = 0;
+	csi_param.sens_clksrc = 0;
+	csi_param.pack_tight = 0;
+	csi_param.force_eof = 0;
+	csi_param.data_en_pol = 0;
+	csi_param.data_fmt = 0;
+	csi_param.csi = cam->csi;      
+	csi_param.mclk = 0;
+
+	pr_debug("   clock_curr=mclk=%d\n", ifparm.u.bt656.clock_curr);
+	if (ifparm.u.bt656.clock_curr == 0)
+		csi_param.clk_mode = IPU_CSI_CLK_MODE_CCIR656_INTERLACED;
+	else
+		csi_param.clk_mode = IPU_CSI_CLK_MODE_GATED_CLK;
 
 
+	csi_param.data_width = IPU_CSI_DATA_WIDTH_8;
+
+	csi_param.Vsync_pol = ifparm.u.bt656.nobt_vs_inv;
+	csi_param.Hsync_pol = ifparm.u.bt656.nobt_hs_inv;
+	csi_param.ext_vsync = ifparm.u.bt656.bt_sync_correct;
+
+
+	cam_fmt.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+	vidioc_int_g_fmt_cap(cam->sensor, &cam_fmt);
+	pr_debug("   g_fmt_cap returns widthxheight of input as %d x %d\n",
+			cam_fmt.fmt.pix.width, cam_fmt.fmt.pix.height);
+
+	csi_param.data_fmt = cam_fmt.fmt.pix.pixelformat;
+
+	cam->crop_bounds.top = cam->crop_bounds.left = 0;
+	cam->crop_bounds.width = cam_fmt.fmt.pix.width;
+	cam->crop_bounds.height = cam_fmt.fmt.pix.height;
+
+	if (cam->device_type != 1) {
+		cam->crop_current.width = cam->crop_bounds.width;
+		cam->crop_current.height = cam->crop_bounds.height;
+	}
+
+	ipu_csi_set_window_size(cam->ipu, cam->crop_current.width,
+				cam->crop_current.height, cam->csi);
+	ipu_csi_set_window_pos(cam->ipu, cam->crop_current.left,
+			       cam->crop_current.top,
+			       cam->csi);
+	ipu_csi_init_interface(cam->ipu, cam->crop_bounds.width,
+			       cam->crop_bounds.height,
+			       cam_fmt.fmt.pix.pixelformat, csi_param);*/
 exit:
 	if (cam->overlay_on == true)
 		start_preview(cam);

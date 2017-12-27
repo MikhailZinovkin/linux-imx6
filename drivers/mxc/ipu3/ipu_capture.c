@@ -18,6 +18,7 @@
  *
  * @ingroup IPU
  */
+//#define DEBUG
 #include <linux/clk.h>
 #include <linux/delay.h>
 #include <linux/errno.h>
@@ -31,6 +32,12 @@
 #include "ipu_prv.h"
 #include "ipu_regs.h"
 
+#if 0
+#undef dev_dbg
+#define dev_dbg(dev, format, arg...) {dev_printk(KERN_ERR, dev, format, ##arg);}
+#undef pr_debug
+#define pr_debug(fmt, ...) printk(KERN_ERR pr_fmt(fmt), ##__VA_ARGS__)
+#endif
 /*!
  * _ipu_csi_mclk_set
  *
@@ -112,6 +119,8 @@ ipu_csi_init_interface(struct ipu_soc *ipu, uint16_t width, uint16_t height,
 		dev_dbg(ipu->dev, "%s:pixel_fmt=%x\n", __func__, pixel_fmt);
 		return -EINVAL;
 	}
+/*cfg_param.clk_mode = IPU_CSI_CLK_MODE_CCIR656_INTERLACED; */ /* DTA Test */		
+//cfg_param.clk_mode = IPU_CSI_CLK_MODE_GATED_CLK;
 
 	/* Set the CSI_SENS_CONF register remaining fields */
 	data |= cfg_param.data_width << CSI_SENS_CONF_DATA_WIDTH_SHIFT |
@@ -125,7 +134,7 @@ ipu_csi_init_interface(struct ipu_soc *ipu, uint16_t width, uint16_t height,
 		cfg_param.pack_tight << CSI_SENS_CONF_PACK_TIGHT_SHIFT |
 		cfg_param.force_eof << CSI_SENS_CONF_FORCE_EOF_SHIFT |
 		cfg_param.data_en_pol << CSI_SENS_CONF_DATA_EN_POL_SHIFT;
-
+ pr_debug("DTA TEST => print CSI_SENS_CONF : done, err=%X\n", data);
 	_ipu_get(ipu);
 
 	mutex_lock(&ipu->mutex_lock);
@@ -148,9 +157,11 @@ ipu_csi_init_interface(struct ipu_soc *ipu, uint16_t width, uint16_t height,
  * 		10 bit mode of GS2971 interleaves this streams, giving
  * 		0x3ff,0x3ff,0x000,0x000,0x000,0x000,xy,xy
  * 		so, it cannot be used in 656 mode. It needs 1120 mode.
- */
+ */	
+pr_debug("DTA TEST passage dans le type CCIR BT progressive");
 		ipu_csi_write(ipu, csi, (6 << 3) | (4 << 16), CSI_CCIR_CODE_1);
 	} else if (cfg_param.clk_mode == IPU_CSI_CLK_MODE_CCIR656_INTERLACED) {
+pr_debug("DTA TEST passage dans le type CCIR BT interlaced");
 		if (width == 720 && height <= 525) {
 			/* NTSC case */
 			/*
@@ -197,6 +208,7 @@ ipu_csi_init_interface(struct ipu_soc *ipu, uint16_t width, uint16_t height,
 		   (cfg_param.clk_mode == IPU_CSI_CLK_MODE_NONGATED_CLK)) {
 		ipu_csi_write(ipu, csi, (6 << 3) | (4 << 16), CSI_CCIR_CODE_1);
 		_ipu_csi_ccir_err_detection_disable(ipu, csi);
+pr_debug("DTA TEST passage dans le type GATED CLK");
 	}
 
 	dev_dbg(ipu->dev, "CSI_SENS_CONF = 0x%08X\n",
@@ -339,6 +351,15 @@ void ipu_csi_window_size_crop(struct ipu_soc *ipu, uint32_t swidth, uint32_t she
 		uint32_t width, uint32_t height, uint32_t left, uint32_t top, uint32_t csi)
 {
 	uint32_t temp;
+	
+	pr_debug("On Calling IPU CSI WINDOWS SIZE CROP\n");
+	pr_debug("swidth= %d\n", swidth);
+	pr_debug("sheight= %d\n", sheight);
+	pr_debug("width= %d\n",width);
+	pr_debug("height= %d\n", height);
+	pr_debug("left= %d\n", left);
+	pr_debug("stop= %d\n",  top);
+	pr_debug("csi= %d\n", csi);
 
 	if ((left >= (1 << 13)) || (top >= (1 << 12))) {
 		pr_err("%s: Error left=%x top=%x\n", __func__, left, top);
@@ -526,29 +547,43 @@ int _ipu_csi_set_mipi_di(struct ipu_soc *ipu, uint32_t num, uint32_t di_val, uin
 	}
 
 	temp = ipu_csi_read(ipu, csi, CSI_MIPI_DI);
-
+	
 	switch (num) {
 	case IPU_CSI_MIPI_DI0:
+dev_dbg(ipu->dev, "CSI_DI0\n");
 		temp &= ~CSI_MIPI_DI0_MASK;
 		temp |= (di_val << CSI_MIPI_DI0_SHIFT);
 		ipu_csi_write(ipu, csi, temp, CSI_MIPI_DI);
 		break;
 	case IPU_CSI_MIPI_DI1:
-		temp &= ~CSI_MIPI_DI1_MASK;
-		temp |= (di_val << CSI_MIPI_DI1_SHIFT);
+dev_dbg(ipu->dev, "CSI_DI1\n");
+		//temp &= ~CSI_MIPI_DI1_MASK;
+		//temp |= (di_val << CSI_MIPI_DI1_SHIFT);
+		//ipu_csi_write(ipu, csi, temp, CSI_MIPI_DI);
+temp &= ~CSI_MIPI_DI0_MASK;
+		temp |= (di_val << CSI_MIPI_DI0_SHIFT);
 		ipu_csi_write(ipu, csi, temp, CSI_MIPI_DI);
 		break;
 	case IPU_CSI_MIPI_DI2:
-		temp &= ~CSI_MIPI_DI2_MASK;
-		temp |= (di_val << CSI_MIPI_DI2_SHIFT);
+		//temp &= ~CSI_MIPI_DI2_MASK;
+		//temp |= (di_val << CSI_MIPI_DI2_SHIFT);
+		//ipu_csi_write(ipu, csi, temp, CSI_MIPI_DI);
+dev_dbg(ipu->dev, "CSI_DI2\n");
+temp &= ~CSI_MIPI_DI0_MASK;
+		temp |= (di_val << CSI_MIPI_DI0_SHIFT);
 		ipu_csi_write(ipu, csi, temp, CSI_MIPI_DI);
 		break;
 	case IPU_CSI_MIPI_DI3:
-		temp &= ~CSI_MIPI_DI3_MASK;
-		temp |= (di_val << CSI_MIPI_DI3_SHIFT);
+		//temp &= ~CSI_MIPI_DI3_MASK;
+		//temp |= (di_val << CSI_MIPI_DI3_SHIFT);
+		//ipu_csi_write(ipu, csi, temp, CSI_MIPI_DI);
+dev_dbg(ipu->dev, "CSI_DI3\n");
+temp &= ~CSI_MIPI_DI0_MASK;
+		temp |= (di_val << CSI_MIPI_DI0_SHIFT);
 		ipu_csi_write(ipu, csi, temp, CSI_MIPI_DI);
 		break;
 	default:
+	dev_dbg(ipu->dev, "WROOOOOOOOOOONG DI!!!!!!!!!!!!\n");
 		retval = -EINVAL;
 	}
 
@@ -636,25 +671,29 @@ err:
 void _ipu_smfc_init(struct ipu_soc *ipu, ipu_channel_t channel, uint32_t mipi_id, uint32_t csi)
 {
 	uint32_t temp;
-
+	uint32_t id = 0;
 	temp = ipu_smfc_read(ipu, SMFC_MAP);
 
 	switch (channel) {
 	case CSI_MEM0:
 		temp &= ~SMFC_MAP_CH0_MASK;
-		temp |= ((csi << 2) | mipi_id) << SMFC_MAP_CH0_SHIFT;
+		temp |= ((csi << 2) | id) << SMFC_MAP_CH0_SHIFT;
+dev_dbg(ipu->dev, "CSI_MEM0\n");
 		break;
 	case CSI_MEM1:
 		temp &= ~SMFC_MAP_CH1_MASK;
-		temp |= ((csi << 2) | mipi_id) << SMFC_MAP_CH1_SHIFT;
+		temp |= ((csi << 2) | id) << SMFC_MAP_CH1_SHIFT;
+dev_dbg(ipu->dev, "CSI_MEM1\n");
 		break;
 	case CSI_MEM2:
 		temp &= ~SMFC_MAP_CH2_MASK;
-		temp |= ((csi << 2) | mipi_id) << SMFC_MAP_CH2_SHIFT;
+		temp |= ((csi << 2) | id) << SMFC_MAP_CH2_SHIFT;
+dev_dbg(ipu->dev, "CSI_MEM2\n");
 		break;
 	case CSI_MEM3:
 		temp &= ~SMFC_MAP_CH3_MASK;
-		temp |= ((csi << 2) | mipi_id) << SMFC_MAP_CH3_SHIFT;
+		temp |= ((csi << 2) | id) << SMFC_MAP_CH3_SHIFT;
+dev_dbg(ipu->dev, "CSI_MEM3\n");
 		break;
 	default:
 		return;
@@ -785,8 +824,9 @@ int _ipu_csi_init(struct ipu_soc *ipu, ipu_channel_t channel, uint32_t csi)
 	case CSI_MEM2:
 	case CSI_MEM3:
 		csi_dest = CSI_DATA_DEST_IDMAC;
-
+		dev_dbg(ipu->dev, "CSI_DATA_DEST_IDMAC\n");
 		if (((csi_sens_conf >> CSI_SENS_CONF_DATA_WIDTH_SHIFT) & 0x0f) == IPU_CSI_DATA_WIDTH_10) {
+			dev_dbg(ipu->dev, "10 BIT\n");
 			/* Send to compander before memory to reduce to 8 bits */
 			/* y = Min[255, (y1[k] + (((x-x1[k])*slope[k])>>6 + 1))>>1] */
 			int i;
@@ -811,9 +851,11 @@ int _ipu_csi_init(struct ipu_soc *ipu, ipu_channel_t channel, uint32_t csi)
 				ipu_csi_write(ipu, csi, s, CSI_CPD_BS((i >> 2)));
 			}
 		}
+		dev_dbg(ipu->dev, "8 BIT\n");
 		break;
 	case CSI_PRP_ENC_MEM:
 	case CSI_PRP_VF_MEM:
+		dev_dbg(ipu->dev, "CSI_DATA_DEST_IC\n");
 		csi_dest = CSI_DATA_DEST_IC;
 		break;
 	default:

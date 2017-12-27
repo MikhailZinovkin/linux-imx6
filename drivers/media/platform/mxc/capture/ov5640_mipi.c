@@ -42,6 +42,16 @@
 #include <linux/proc_fs.h>
 #include <linux/seq_file.h>
 
+//#define DEBUG
+
+#if 0
+#undef dev_dbg
+#define dev_dbg(dev, format, arg...) {dev_printk(KERN_ERR, dev, format, ##arg);}
+#undef pr_debug
+#define pr_debug(fmt, ...) printk(KERN_ERR pr_fmt(fmt), ##__VA_ARGS__)
+#endif
+
+
 #define OV5640_VOLTAGE_ANALOG               2800000
 #define OV5640_VOLTAGE_DIGITAL_CORE         1500000
 #define OV5640_VOLTAGE_DIGITAL_IO           1800000
@@ -2940,7 +2950,8 @@ static int ov5640_init_mode(enum ov5640_frame_rate frame_rate,
 			}
 			msleep(10);
 		}
-
+		pr_debug("DPHY STATUS IS: %x\n", mipi_reg);
+		
 		i = 0;
 		/* wait for mipi stable */
 		while (1) {
@@ -2953,7 +2964,7 @@ static int ov5640_init_mode(enum ov5640_frame_rate frame_rate,
 			}
 			msleep(10);
 		}
-
+		pr_debug("MIPI CSI2 ERROR STATUS IS: %x\n", mipi_reg);
 	}
 err:
 	return retval;

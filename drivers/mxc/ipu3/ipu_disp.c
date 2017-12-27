@@ -18,7 +18,7 @@
  *
  * @ingroup IPU
  */
-
+#define DEBUG
 #include <linux/clk.h>
 #include <linux/clk-provider.h>
 #include <linux/delay.h>
@@ -34,6 +34,13 @@
 
 #include "ipu_param_mem.h"
 #include "ipu_regs.h"
+
+#if 1
+#undef dev_dbg
+#define dev_dbg(dev, format, arg...) {dev_printk(KERN_ERR, dev, format, ##arg);}
+#undef pr_debug
+#define pr_debug(fmt, ...) printk(KERN_ERR pr_fmt(fmt), ##__VA_ARGS__)
+#endif
 
 struct dp_csc_param_t {
 	int mode;

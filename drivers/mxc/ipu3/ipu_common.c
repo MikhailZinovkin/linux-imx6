@@ -18,6 +18,7 @@
  *
  * @ingroup IPU
  */
+//#define DEBUG
 #include <linux/busfreq-imx6.h>
 #include <linux/clk.h>
 #include <linux/clk-provider.h>
@@ -43,6 +44,12 @@
 #include "ipu_param_mem.h"
 #include "ipu_regs.h"
 
+#if 0
+#undef dev_dbg
+#define dev_dbg(dev, format, arg...) {dev_printk(KERN_ERR, dev, format, ##arg);}
+#undef pr_debug
+#define pr_debug(fmt, ...) printk(KERN_ERR pr_fmt(fmt), ##__VA_ARGS__)
+#endif
 static struct ipu_soc ipu_array[MXC_IPU_MAX_NUM];
 int g_ipu_hw_rev;
 

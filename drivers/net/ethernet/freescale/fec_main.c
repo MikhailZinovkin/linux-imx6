@@ -1927,27 +1927,49 @@ static int fec_enet_mii_probe(struct net_device *ndev)
 	char phy_name[MII_BUS_ID_SIZE + 3];
 	int phy_id;
 	int dev_id = fep->dev_id;
+	int test = PHY_MAX_ADDR;
+	netdev_info(ndev, "PHY-id is uninint now , dev-id = %d Phy_MAX_ADDR= %d",
+		    phy_id, dev_id, test);
+
 
 	fep->phy_dev = NULL;
+	
+	netdev_info(ndev, "Checking PHYs adddress\n");
 
 	/* check for attached phy */
 	if (IS_ERR(&fep->phy_id) || fep->phy_id >= PHY_MAX_ADDR ||
 		fep->mii_bus->phy_mask & (1 << fep->phy_id)) {
-		for (phy_id = 0; (phy_id < PHY_MAX_ADDR); phy_id++) {
+		for (phy_id = 0; (phy_id < PHY_MAX_ADDR); phy_id++) 
+		{
+		netdev_info(ndev, "Checkyng Phy_id = %d from %d",
+		    phy_id, test);
 			if ((fep->mii_bus->phy_mask & (1 << phy_id)))
+			{
+				netdev_info(ndev, "case phy masm & 1 << phy_id");
 				continue;
+			}
 			if (fep->mii_bus->phy_map[phy_id] == NULL)
+			{
+				netdev_info(ndev, "fep->mii_bus->phy_map[phy_id] == NULL");
 				continue;
+			}
 			if (fep->mii_bus->phy_map[phy_id]->phy_id == 0)
+			{
+				netdev_info(ndev, "fep->mii_bus->phy_map[phy_id]->phy_id == 0");
 				continue;
+			}
 			if (dev_id--)
 				continue;
 			break;
 		}
 	} else {
+		netdev_info(ndev, "Phy id = %d  fep-phy_id = %d\n", phy_id, fep->phy_id);
 		phy_id = fep->phy_id;
 	}
 	strncpy(mdio_bus_id, fep->mii_bus->id, MII_BUS_ID_SIZE);
+	
+	netdev_info(ndev, "PHY-id = %d , dev-id = %d ",
+		    phy_id, dev_id);
 
 	if (phy_id >= PHY_MAX_ADDR) {
 		netdev_info(ndev, "no PHY, assuming direct connection to switch\n");

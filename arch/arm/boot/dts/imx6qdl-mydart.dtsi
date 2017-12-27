@@ -378,8 +378,26 @@
 		reg = <0x20>;
 		gpio-controller;
 		#gpio-cells = <2>;
-		resets = <&tca6408_reset>;
+		resets = <&tca6408_reset>;    
 	};
+	adv7280 {
+		compatible = "adv7282";
+                pinctrl-names = "default";
+                reg = <0x21>;
+                csi_id = <0>; /* video source : CSI1 */
+                cvbs = <1>; /* ANALOGIC channel INPUT#1 */
+ 
+                //DOVDD-supply = <&reg_3p3v>; // 3.3v
+                //AVDD-supply = <&reg_3p3v>; // 1.8v
+                //DVDD-supply = <&reg_3p3v>; // 1.8v
+                //PVDD-supply = <&reg_3p3v>; // 1.8v
+                clocks = <&clks 200>;
+                clock-names = "csi_mclk";
+                mipi_camera = <1>; /* Needed for v4l2 configuration */
+                ipu_id = <1>; /* IPU1 selected */
+ 
+                status = "okay";
+		};		  
 };
 
 &i2c2 {
@@ -471,7 +489,7 @@
 				MX6QDL_PAD_EIM_DA7__GPIO3_IO07 			0x80000000
 				/* Touch */
 				/* for Bluetooth/wifi enable */
-				/* SDMMC2 CD/WP */
+				/* SDMMC2 CD/WP */mipi_csi2_dphy_status=0x210
 				MX6QDL_PAD_KEY_COL4__GPIO4_IO14			0x80000000
 				MX6QDL_PAD_KEY_ROW4__GPIO4_IO15			0x80000000
 				/* USBOTG ID pin */
