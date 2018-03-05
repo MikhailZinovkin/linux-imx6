@@ -35,7 +35,7 @@
 			regulator-min-microvolt = <5000000>;
 			regulator-max-microvolt = <5000000>;
 			gpio = <&gpio4 15 0>;
-			enable-active-high;
+			enable-active-low; //was high
 		};
 
 		reg_usb_h1_vbus: usb_h1_vbus {
@@ -44,7 +44,7 @@
 			regulator-min-microvolt = <5000000>;
 			regulator-max-microvolt = <5000000>;
             gpio = <&gpio1 28 0>;
-            enable-active-high;
+            enable-active-low; //was high
 		};
 
 		reg_audio: tlv320aic3x_supply {
