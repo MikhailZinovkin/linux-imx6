@@ -131,7 +131,7 @@ typedef struct {
  *  PAL: raw=720x625, active=720x576.
  *  NTSC: raw=720x525, active=720x480.
  */
-static video_fmt_t video_fmts[] = {
+static video_fmt_t video_fmts[] = {     
 	{			/*! NTSC */
 	 .v4l2_id = V4L2_STD_NTSC,
 	 .name = "NTSC",
@@ -139,7 +139,7 @@ static video_fmt_t video_fmts[] = {
 	 .raw_height = 525,		/* SENS_FRM_HEIGHT */
 	 .active_width = 720,		/* ACT_FRM_WIDTH */
 	 .active_height = 480,		/* ACT_FRM_HEIGHT */
-	 .active_top = 13,
+	 .active_top = 0,
 	 .active_left = 0,
 	.frame_rate = 30,
 	 },
@@ -147,7 +147,7 @@ static video_fmt_t video_fmts[] = {
 	 .v4l2_id = V4L2_STD_PAL,     
 	 .name = "PAL",
 	 .raw_width = 720,
-	 .raw_height = 576,
+	 .raw_height = 625,
 	 .active_width = 720,
 	 .active_height = 576,
 	 .active_top = 0,
@@ -163,7 +163,7 @@ static video_fmt_t video_fmts[] = {
 	 .active_height = 576,
 	 .active_top = 0,
 	 .active_left = 0,
-	.frame_rate = 0,
+	.frame_rate = 25,
 	 },
 };
 
@@ -1264,6 +1264,198 @@ adv7282_write_reg(0xFD,0x84); //Set VPP Map Address
 adv7282_write_reg(0xFE,0x88); //Set CSI Map Address     
 }
 
+
+
+static int adv7282_reinit(void)
+{
+	int ret = 0;
+	u32 cvbs = true;
+	void *mipi_csi2_info;
+	u32 mipi_reg;
+
+	/*! Read the revision ID of the chip device */
+	adv7282_data.rev_id = adv7282_read(ADV7282_IDENT);
+	dev_dbg(&adv7282_data.sen.i2c_client->dev,
+		"%s:ADV7282_IDENT=%02X\n", __func__, (unsigned char)adv7282_data.rev_id);
+
+	pr_info("start mipi csi 2 from ov5640 mipi\n");
+    	mipi_csi2_info = mipi_csi2_get_info();
+
+	// initial mipi dphy 
+	if (!mipi_csi2_info) {
+		printk(KERN_ERR "%s() in %s: Fail to get mipi_csi2_info!\n",__func__, __FILE__);
+		return -1;
+	}
+	
+	pr_info("csi2 enable\n");
+    	ret=mipi_csi2_enable(mipi_csi2_info);
+   	if(ret<0){
+       		printk(KERN_ERR "%s() in %s: mipi_csi2_enable fail!\n",
+              __func__, __FILE__);
+       		return -1;
+    	}
+
+	if (!mipi_csi2_get_status(mipi_csi2_info))
+		mipi_csi2_enable(mipi_csi2_info);
+
+	if (!mipi_csi2_get_status(mipi_csi2_info)) {
+		pr_err("Can not enable mipi csi2 driver!\n");
+		return -1;
+	}
+    	else{
+       		dev_dbg(&adv7282_data.sen.i2c_client->dev, "mipi_csi2_get_status function is done.\n");
+    	}
+   
+
+	pr_info("mipi always on\n");
+	adv7282_data.sen.mipi_camera = 1; 
+	clk_prepare_enable(adv7282_data.sen.sensor_clk);
+	
+	pr_info("set lanes\n");
+	mipi_csi2_set_lanes(mipi_csi2_info, 1);
+
+        dev_dbg(&adv7282_data.sen.i2c_client->dev, "mipi_csi2 config in YUV442 configuration.\n");
+        mipi_csi2_set_datatype(mipi_csi2_info, MIPI_DT_YUV422);
+
+	pr_info("mipi csi2 reset pal\n");
+    	mipi_csi2_reset_pal(mipi_csi2_info);    
+
+    /*! ADV7282-m initializations. */
+	adv7282_hard_reset(cvbs);
+	
+	pr_info("prog virt channel 2\n");
+	// Program Virtual Channel #1 under ADV7282-m
+	adv7282_csi_write(0x0D,0x80); 
+	pr_debug("VC_REF=0x%02x\n", adv7282_csi_read(0x0D)); // Display Virtual Channel #1 register 
+
+	  
+	/* progreeeesssssive config*/
+
+	pr_info("csi config done progressive\n");
+
+	adv7282_csi_write(0x01,0x20);
+	adv7282_csi_write(0x02,0x28);
+	adv7282_csi_write(0x03,0x38);
+	adv7282_csi_write(0x04,0x30);
+	adv7282_csi_write(0x05,0x30);
+	adv7282_csi_write(0x06,0x80); 
+	adv7282_csi_write(0x07,0x70); 
+	adv7282_csi_write(0x08,0x50);
+	 
+	adv7282_csi_write(0xDE,0x02); 
+	adv7282_csi_write(0xD2,0xF7); 
+	adv7282_csi_write(0xD8,0x65); 
+	adv7282_csi_write(0xE0,0x09); 
+	adv7282_csi_write(0x2C,0x00); 
+	adv7282_csi_write(0x1D,0x80); 
+	adv7282_csi_write(0x00,0x00); 
+
+	adv7282_vpp_write(0xA3,0x00); //ADI Required Write
+	adv7282_vpp_write(0x5B,0x00); //I2C_DEINT_ENABLE : Advanced Timing Enabled
+	adv7282_vpp_write(0x55,0x80); //ADV_TIMING_ MODE_EN : Enable I2P / Enable the Deinterlacer for I2P
+	pr_info("vpp config done progressive\n");
+
+	{
+
+	v4l2_std_id std;
+
+	adv7282_get_std(&std);
+	}
+	
+	ret = v4l2_int_device_register(&adv7282_int_device);
+	pr_debug("   v4l2 device created, status is %d\n", ret);
+	pr_info("v4l2 dev created\n");
+
+    	msleep(400);
+
+/* +++++ check ADV7282 activity +++++++++++ */
+    	if (mipi_csi2_info) {
+		unsigned int i = 0;
+
+		// wait for mipi sensor ready 
+		while (1) {
+			mipi_reg = mipi_csi2_dphy_status(mipi_csi2_info);
+			if (mipi_reg != 0x200)
+				break;
+			if (i++ >= 20) {
+               pr_err("ERROR: mipi csi2 can not receive sensor clk! mipi_csi2_dphy_status=0x%x\n", mipi_reg);
+               i2c_unregister_device(adv7282_data.csi_client);
+               i2c_unregister_device(adv7282_data.vpp_client);
+               return -1;
+			}
+			msleep(10);
+		}
+        pr_debug("Dbg: mipi csi2 receive sensor clk! mipi_csi2_dphy_status=0x%x\n", mipi_reg);
+
+        i = 0;
+		// wait for mipi stable 
+		while (1) {
+			mipi_reg = mipi_csi2_get_error1(mipi_csi2_info);
+			if (!mipi_reg){
+               pr_debug("Dbg: mipi csi2 can receive data...mipi_csi2_get_error1=%d\n",mipi_reg);
+               break;
+            }
+			if (i++ >= 20) {
+                pr_err("ERROR: mipi csi2 can not receive data correctly, get_error1=0%x!\n",mipi_reg);
+                i2c_unregister_device(adv7282_data.csi_client);
+                i2c_unregister_device(adv7282_data.vpp_client);
+//				return -1;
+                break;
+			}
+			msleep(10);
+		}
+
+	}  
+
+   	return 0;
+}
+
+static int my_open(struct inode *i, struct file *f)
+{
+	pr_info("ADV7282 open\n");
+    return 0;
+}
+static int my_close(struct inode *i, struct file *f)
+{
+	pr_info("ADV7282 closed\n");
+    return 0;
+}
+
+static long my_ioctl(struct file *f, unsigned int cmd, unsigned long arg)
+{   
+    int ret = 0;
+    void *mipi_csi2_info;
+    mipi_csi2_info = mipi_csi2_get_info();
+   
+	switch (cmd)
+    {
+        case 0xCA:	   
+            pr_info("UNREGISTER V4l ADV7282_tvin\n");
+	    v4l2_int_device_unregister(&adv7282_int_device);
+		mipi_csi2_info = mipi_csi2_get_info();
+ 		mipi_csi2_disable(mipi_csi2_info);
+		pr_info(" ADV7282 V4L2 UNREG DONE\n");
+            break;
+        case 0xCB:
+	    mipi_csi2_info = mipi_csi2_get_info();
+ 	    mipi_csi2_disable(mipi_csi2_info);
+ 	    adv7282_reinit();
+	    pr_debug(" ADV7282  v4l2 device created, status is %d\n", ret);
+	    pr_info("ADV7282 v4l2 dev created\n");
+            break;      
+    }
+ 
+    return 0;
+}
+
+static struct file_operations Fops = {
+	.owner = THIS_MODULE,
+	.open = my_open,
+	.release = my_close,
+	.unlocked_ioctl = my_ioctl
+};
+
+
 /*! ADV7282 I2C attach function.
  *
  *  @param *adapter	struct i2c_adapter *.
@@ -1457,8 +1649,8 @@ pr_info("csi2 enable\n");
 	
         // Only reset MIPI CSI2 HW at sensor initialize
 	//if (mode == ov5640_mode_INIT)
-	pr_info("mipi csi2 reset\n");
-    mipi_csi2_reset(mipi_csi2_info);
+	pr_info("mipi csi2 reset pal\n");
+    mipi_csi2_reset_pal(mipi_csi2_info);
     
 
     /*! ADV7282-m initializations. */
@@ -1577,8 +1769,10 @@ v4l2_std_id std;
 adv7282_get_std(&std);
 }
 
-
-
+	ret = register_chrdev(200, 
+		         "adv7282",
+		         &Fops);
+	pr_debug("   FOPS, status is %d\n", ret);
 	/* This function attaches this structure to the /dev/video0 device.
 	 * The pointer in priv points to the adv7282_data structure here.*/
 	adv7282_int_device.priv = &adv7282_data;
@@ -1637,6 +1831,8 @@ pr_debug("%s: init done, ret=%d\n", __func__,ret);
     return ret;
 }
 
+
+
 /*!
  * ADV7282 I2C detach function.
  * Called on rmmod.
@@ -1653,32 +1849,29 @@ static int adv7282_detach(struct i2c_client *client)
 		"%s:Removing %s video decoder @ 0x%02X from adapter %s\n",
 		__func__, IF_NAME, client->addr << 1, client->adapter->name);
 
-    /* disable mipi csi2 */
+    /* disable mipi csi2 
     mipi_csi2_info = mipi_csi2_get_info();
     if (mipi_csi2_info)
         if (mipi_csi2_get_status(mipi_csi2_info))
-            mipi_csi2_disable(mipi_csi2_info);
+            mipi_csi2_disable(mipi_csi2_info);*/
 
 	/* Power down via i2c */
 	/*adv7282_write_reg(ADV7282_PWR_MNG, 0x24); */
 
     i2c_unregister_device(adv7282_data.csi_client);
     i2c_unregister_device(adv7282_data.vpp_client);
-
-	if (dvddio_regulator)
-		regulator_disable(dvddio_regulator);
-
-	if (dvdd_regulator)
-		regulator_disable(dvdd_regulator);
-
-	if (avdd_regulator)
-		regulator_disable(avdd_regulator);
-
-	if (pvdd_regulator)
-		regulator_disable(pvdd_regulator);
+	pr_info("I2C UNREG DONE\n");
+	
 
 	v4l2_int_device_unregister(&adv7282_int_device);
+pr_info("V4L2 UNREG DONE\n");
+	 /* disable mipi csi2 */
+    	mipi_csi2_info = mipi_csi2_get_info();
+    	if (mipi_csi2_info)
+        if (mipi_csi2_get_status(mipi_csi2_info))
+            mipi_csi2_disable(mipi_csi2_info);
 
+pr_info("MIPI CSI2 DISABLED\n");
 	return 0;
 }
 /*!

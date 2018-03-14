@@ -1143,7 +1143,7 @@
 			>;
 		};
 	};
-
+#if 0
 	ecspi3 {
 		pinctrl_ecspi3_1: ecspi3grp-1 {
 			fsl,pins = <
@@ -1153,7 +1153,7 @@
 			>;
 		};
 	};
-
+#endif
 	enet {
 		pinctrl_enet_1: enetgrp-1 {
 			fsl,pins = <

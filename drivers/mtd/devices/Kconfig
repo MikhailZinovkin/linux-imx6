@@ -28,6 +28,16 @@ config MTD_PMC551_BUGFIX
 	  column and row mux values.  This option will fix them, but will
 	  break other memory configurations.  If unsure say N.
 
+config MTD_S25FL
+       tristate "Support Cypress S25FL128S/S25FL256S SPI Flash chips"
+       depends on SPI_MASTER
+       help
+         This enables access to the non S25FL128S/S25FL256S SPI flash chips, used
+         for program and data storage.
+
+         Set up your spi devices with the right board-specific platform data,
+         if you want to specify device partitioning
+
 config MTD_PMC551_DEBUG
 	bool "PMC551 Debugging"
 	depends on MTD_PMC551

@@ -246,6 +246,7 @@
 	dma-names = "rx", "tx";
 };
 
+#if 0
 &iomuxc {
 	ipu2 {
 		pinctrl_ipu2_1: ipu2grp-1 {
@@ -283,6 +284,7 @@
 		};
 	};
 };
+#endif
 
 &ldb {
 	compatible = "fsl,imx6q-ldb", "fsl,imx53-ldb";
