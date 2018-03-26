@@ -357,7 +357,7 @@
 	};
 
 	ov5640_mipi: ov5640_mipi@3c {
-		compatible = "ovti,ov5640_mipi";
+		compatible = "ovti,ov5640_mipi";      
 		reg = <0x3c>;
 		clocks = <&clks 200>;
 		clock-names = "csi_mclk";
@@ -373,29 +373,23 @@
 		mclk_source = <0>;
 	};
 
-	tca6408: gpio@20 {
+	/*tca6408: gpio@20 {
 		compatible = "ti,tca6408";
 		reg = <0x20>;
 		gpio-controller;
 		#gpio-cells = <2>;
 		resets = <&tca6408_reset>;    
-	};
+	};*/
 	adv7280 {
 		compatible = "adv7282";
                 pinctrl-names = "default";
                 reg = <0x21>;
-                csi_id = <0>; /* video source : CSI1 */
-                cvbs = <1>; /* ANALOGIC channel INPUT#1 */
- 
-                //DOVDD-supply = <&reg_3p3v>; // 3.3v
-                //AVDD-supply = <&reg_3p3v>; // 1.8v
-                //DVDD-supply = <&reg_3p3v>; // 1.8v
-                //PVDD-supply = <&reg_3p3v>; // 1.8v
+                csi_id = <0>; 
+                cvbs = <1>;
                 clocks = <&clks 200>;
                 clock-names = "csi_mclk";
-                mipi_camera = <1>; /* Needed for v4l2 configuration */
-                ipu_id = <1>; /* IPU1 selected */
- 
+                mipi_camera = <1>; 
+                ipu_id = <1>; 
                 status = "okay";
 		};		  
 };
@@ -522,7 +516,18 @@
 				MX6QDL_PAD_GPIO_4__GPIO1_IO04 0x17059
 			>;
 		};
-#endif
+#endif		
+		pinctrl_ecspi3_1: ecspi3grp-1 {
+			fsl,pins = <
+				MX6QDL_PAD_DISP0_DAT2__ECSPI3_MISO	0x100b1
+				MX6QDL_PAD_DISP0_DAT1__ECSPI3_MOSI	0x100b1
+				MX6QDL_PAD_DISP0_DAT0__ECSPI3_SCLK	0x100b1
+				/* CS */
+		#define FLASH_CS	<&gpio4 24 GPIO_ACTIVE_LOW>
+				MX6QDL_PAD_DISP0_DAT3__GPIO4_IO24 0x80000000 /* SPI NOR chipselect */
+			>;
+		};
+	
 		pinctrl_ecspi2: ecspi2grp {
 				fsl,pins = <
 					MX6QDL_PAD_DISP0_DAT17__ECSPI2_MISO	0x100b1
@@ -827,6 +832,20 @@
 
 &vpu {
 	pu-supply = <&pu_dummy>; /* ldo-bypass:use pu_dummy if VDDSOC share with VDDPU */
+};
+
+&ecspi3 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_ecspi3_1>;
+	status = "okay";
+	fsl,spi-num-chipselects = <1>;
+	cs-gpios = <&gpio4 24 0>;
+
+	flash: spidev@0 {
+		compatible = "s25fl"; //spidev
+		spi-max-frequency = <20000000>;
+		reg = <0>;
+	};
 };
 
 &ecspi2 {

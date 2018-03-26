@@ -74,10 +74,9 @@ enum ov5640_mode {
 	ov5640_mode_PAL_720_576 = 3,
 	ov5640_mode_720P_1280_720 = 4,
 	ov5640_mode_1080P_1920_1080 = 5,
-	ov5640_mode_QSXGA_2592_1944 = 6,
-	ov5640_mode_QCIF_176_144 = 7,
-	ov5640_mode_XGA_1024_768 = 8,
-	ov5640_mode_MAX = 8,
+	ov5640_mode_QCIF_176_144 = 6,
+	ov5640_mode_XGA_1024_768 = 7,
+	ov5640_mode_MAX = 7,
 	ov5640_mode_INIT = 0xff, /*only for sensor init*/
 };
 
@@ -1842,29 +1841,6 @@ static struct reg_value ov5640_setting_15fps_1080P_1920_1080[] = {
 	{0x4005, 0x1a, 0, 0}, {0x3008, 0x02, 0, 0}, {0x3503, 0, 0, 0},
 };
 
-static struct reg_value ov5640_setting_15fps_QSXGA_2592_1944[] = {
-	{0x4202, 0x0f, 0, 0},	/* stream off the sensor */
-	{0x3820, 0x40, 0, 0}, {0x3821, 0x06, 0, 0}, /*disable flip*/
-	{0x3035, 0x21, 0, 0}, {0x3036, 0x54, 0, 0}, {0x3c07, 0x08, 0, 0},
-	{0x3c09, 0x1c, 0, 0}, {0x3c0a, 0x9c, 0, 0}, {0x3c0b, 0x40, 0, 0},
-	{0x3820, 0x40, 0, 0}, {0x3821, 0x06, 0, 0}, {0x3814, 0x11, 0, 0},
-	{0x3815, 0x11, 0, 0}, {0x3800, 0x00, 0, 0}, {0x3801, 0x00, 0, 0},
-	{0x3802, 0x00, 0, 0}, {0x3803, 0x00, 0, 0}, {0x3804, 0x0a, 0, 0},
-	{0x3805, 0x3f, 0, 0}, {0x3806, 0x07, 0, 0}, {0x3807, 0x9f, 0, 0},
-	{0x3808, 0x0a, 0, 0}, {0x3809, 0x20, 0, 0}, {0x380a, 0x07, 0, 0},
-	{0x380b, 0x98, 0, 0}, {0x380c, 0x0b, 0, 0}, {0x380d, 0x1c, 0, 0},
-	{0x380e, 0x07, 0, 0}, {0x380f, 0xb0, 0, 0}, {0x3810, 0x00, 0, 0},
-	{0x3811, 0x10, 0, 0}, {0x3812, 0x00, 0, 0}, {0x3813, 0x04, 0, 0},
-	{0x3618, 0x04, 0, 0}, {0x3612, 0x29, 0, 0}, {0x3708, 0x21, 0, 0},
-	{0x3709, 0x12, 0, 0}, {0x370c, 0x00, 0, 0}, {0x3a02, 0x03, 0, 0},
-	{0x3a03, 0xd8, 0, 0}, {0x3a08, 0x01, 0, 0}, {0x3a09, 0x27, 0, 0},
-	{0x3a0a, 0x00, 0, 0}, {0x3a0b, 0xf6, 0, 0}, {0x3a0e, 0x03, 0, 0},
-	{0x3a0d, 0x04, 0, 0}, {0x3a14, 0x03, 0, 0}, {0x3a15, 0xd8, 0, 0},
-	{0x4001, 0x02, 0, 0}, {0x4004, 0x06, 0, 0}, {0x4713, 0x03, 0, 0},
-	{0x4407, 0x04, 0, 0}, {0x460b, 0x35, 0, 0}, {0x460c, 0x22, 0, 0},
-	{0x3824, 0x02, 0, 0}, {0x5001, 0x83, 0, 70},
-	{0x4202, 0x00, 0, 0},	/* stream on the sensor */
-};
 
 static struct ov5640_mode_info ov5640_mode_info_data[2][ov5640_mode_MAX + 1] = {
 	{
@@ -1885,10 +1861,7 @@ static struct ov5640_mode_info ov5640_mode_info_data[2][ov5640_mode_MAX + 1] = {
 		ARRAY_SIZE(ov5640_setting_15fps_720P_1280_720)},
 		{ov5640_mode_1080P_1920_1080, SCALING, 1920, 1080,
 		ov5640_setting_15fps_1080P_1920_1080,
-		ARRAY_SIZE(ov5640_setting_15fps_1080P_1920_1080)},
-		{ov5640_mode_QSXGA_2592_1944, SCALING, 2592, 1944,
-		ov5640_setting_15fps_QSXGA_2592_1944,
-		ARRAY_SIZE(ov5640_setting_15fps_QSXGA_2592_1944)},
+		ARRAY_SIZE(ov5640_setting_15fps_1080P_1920_1080)},		
 		{ov5640_mode_QCIF_176_144, SUBSAMPLING, 176, 144,
 		ov5640_setting_15fps_QCIF_176_144,
 		ARRAY_SIZE(ov5640_setting_15fps_QCIF_176_144)},
@@ -1914,8 +1887,7 @@ static struct ov5640_mode_info ov5640_mode_info_data[2][ov5640_mode_MAX + 1] = {
 		ARRAY_SIZE(ov5640_setting_30fps_720P_1280_720)},
 		{ov5640_mode_1080P_1920_1080, SCALING, 1920, 1080,
 		ov5640_setting_30fps_1080P_1920_1080,
-		ARRAY_SIZE(ov5640_setting_30fps_1080P_1920_1080)},
-		{ov5640_mode_QSXGA_2592_1944, -1, 0, 0, NULL, 0},
+		ARRAY_SIZE(ov5640_setting_30fps_1080P_1920_1080)},		
 		{ov5640_mode_QCIF_176_144, SUBSAMPLING, 176, 144,
 		ov5640_setting_30fps_QCIF_176_144,
 		ARRAY_SIZE(ov5640_setting_30fps_QCIF_176_144)},
@@ -1924,11 +1896,6 @@ static struct ov5640_mode_info ov5640_mode_info_data[2][ov5640_mode_MAX + 1] = {
 		ARRAY_SIZE(ov5640_setting_30fps_XGA_1024_768)},
 	},
 };
-
-static struct regulator *io_regulator;
-static struct regulator *core_regulator;
-static struct regulator *analog_regulator;
-static struct regulator *gpo_regulator;
 
 static int ov5640_probe(struct i2c_client *adapter,
 				const struct i2c_device_id *device_id);
@@ -1992,7 +1959,7 @@ static s32 update_device_addr(struct sensor_data *sensor)
 
 static void ov5640_reset(void)
 {
-	mxc_camera_common_lock();
+	//mxc_camera_common_lock();
 
 	/* camera reset */
 	gpio_set_value(rst_gpio, 1);
@@ -2011,7 +1978,7 @@ static void ov5640_reset(void)
 	msleep(20);
 	pr_debug("%s(mipi): reset released\n", __func__);
 	update_device_addr(&ov5640_data);
-	mxc_camera_common_unlock();
+	//mxc_camera_common_unlock();
 
 	gpio_set_value(pwn_gpio, 1);
 }
@@ -2019,61 +1986,6 @@ static void ov5640_reset(void)
 static int ov5640_power_on(struct device *dev)
 {
 	int ret = 0;
-
-	io_regulator = devm_regulator_get(dev, "DOVDD");
-	if (!IS_ERR(io_regulator)) {
-		regulator_set_voltage(io_regulator,
-				      OV5640_VOLTAGE_DIGITAL_IO,
-				      OV5640_VOLTAGE_DIGITAL_IO);
-		ret = regulator_enable(io_regulator);
-		if (ret) {
-			pr_err("%s:io set voltage error\n", __func__);
-			return ret;
-		} else {
-			dev_dbg(dev,
-				"%s:io set voltage ok\n", __func__);
-		}
-	} else {
-		pr_err("%s: cannot get io voltage error\n", __func__);
-		io_regulator = NULL;
-	}
-
-	core_regulator = devm_regulator_get(dev, "DVDD");
-	if (!IS_ERR(core_regulator)) {
-		regulator_set_voltage(core_regulator,
-				      OV5640_VOLTAGE_DIGITAL_CORE,
-				      OV5640_VOLTAGE_DIGITAL_CORE);
-		ret = regulator_enable(core_regulator);
-		if (ret) {
-			pr_err("%s:core set voltage error\n", __func__);
-			return ret;
-		} else {
-			dev_dbg(dev,
-				"%s:core set voltage ok\n", __func__);
-		}
-	} else {
-		core_regulator = NULL;
-		pr_err("%s: cannot get core voltage error\n", __func__);
-	}
-
-	analog_regulator = devm_regulator_get(dev, "AVDD");
-	if (!IS_ERR(analog_regulator)) {
-		regulator_set_voltage(analog_regulator,
-				      OV5640_VOLTAGE_ANALOG,
-				      OV5640_VOLTAGE_ANALOG);
-		ret = regulator_enable(analog_regulator);
-		if (ret) {
-			pr_err("%s:analog set voltage error\n",
-				__func__);
-			return ret;
-		} else {
-			dev_dbg(dev,
-				"%s:analog set voltage ok\n", __func__);
-		}
-	} else {
-		analog_regulator = NULL;
-		pr_err("%s: cannot get analog voltage error\n", __func__);
-	}
 
 	return ret;
 }
@@ -2140,111 +2052,7 @@ static s32 ov5640_read_reg(u16 reg, u8 *val)
 	pr_debug("%s(mipi):reg=%x,val=%x\n", __func__, reg, buf[0]);
 	return buf[0];
 }
-//----------------------------------------------------------------------------
-#define __AEC_AGC_ADDR    		0x3500
-#define __AEC_AGC_REGNUM  		0x0E
-#define __TIMING_CNTR_ADDR    	0x3800
-#define __TIMING_CNTR_REGNUM  	0x22
-#define __STROBE_CNTR_ADDR    	0x3A00
-#define __STROBE_CNTR_REGNUM  	0x26
-#define __SYSTEM_CNTR_ADDR    	0x3000
-#define __SYSTEM_CNTR_REGNUM  	0x52
-struct proc_dir_entry *proc_file_entry;	
 
-//----------------------------------------------------------------------------
-//ssize_t (*read) (struct file *, char __user *, size_t, loff_t *);
-static int ov5640_read_proc(struct seq_file *seq, void *v)
-{
-	//nn struct i2c_client *client = (struct i2c_client *)seq->private;
-// 	int len = 0;
- 	u16 regnum = 0;
-    static int cnt =0;
- 	//int status =0;
- 	//u16 regval;
-	//u16 regvals[__AEC_AGC_REGNUM];
-	int i;
-	u8  temp;
-	int tmp;
-	
-	seq_printf(seq,"\nReg Read:\n");
-	seq_printf(seq, "%6d:    0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F\n", cnt++ );
-	
-	for (regnum=0;  regnum < __SYSTEM_CNTR_REGNUM; ) {
-		seq_printf(seq, "%#4x:  ", __SYSTEM_CNTR_ADDR + regnum);
-		for (i = 0;
-		     i < 16  && regnum < __SYSTEM_CNTR_REGNUM;
-		     i++, regnum++) {
-				tmp = ov5640_read_reg(__SYSTEM_CNTR_ADDR + regnum, &temp);
-				if (tmp < 0) 
-				  seq_printf(seq, " er");
-				else 
-				  seq_printf(seq, " %02x", temp);
-		}
-		seq_printf(seq,"\n");
-	}
-
-	for (regnum=0;  regnum < __AEC_AGC_REGNUM; ) {
-		seq_printf(seq, "%#4x:  ", __AEC_AGC_ADDR + regnum);
-		for (i = 0;
-		     i < 16  && regnum < __AEC_AGC_REGNUM;
-		     i++, regnum++) {
-				tmp = ov5640_read_reg(__AEC_AGC_ADDR + regnum, &temp);
-				if (tmp < 0) 
-				  seq_printf(seq, " er");
-				else 
-				  seq_printf(seq, " %02x", temp);
-		}
-		seq_printf(seq,"\n");
-	}
-	//seq_printf(seq,"\nReg Read:\n");
-	//seq_printf(seq, "%6d:    0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F\n", cnt++ );
-	
-	for (regnum=0;  regnum < __TIMING_CNTR_REGNUM; ) {
-		seq_printf(seq, "%#4x:  ", __TIMING_CNTR_ADDR + regnum);
-		for (i = 0;
-		     i < 16  && regnum < __TIMING_CNTR_REGNUM;
-		     i++, regnum++) {
-				tmp = ov5640_read_reg(__TIMING_CNTR_ADDR + regnum, &temp);
-				if (tmp < 0) 
-				  seq_printf(seq, " er");
-				else 
-				  seq_printf(seq, " %02x", temp);
-		}
-		seq_printf(seq,"\n");
-	}
-	//seq_printf(seq,"\nReg Read:\n");
-	//seq_printf(seq, "%6d:    0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F\n", cnt++ );
-	
-	for (regnum=0;  regnum < __STROBE_CNTR_REGNUM; ) {
-		seq_printf(seq, "%#4x:  ", __STROBE_CNTR_ADDR + regnum);
-		for (i = 0;
-		     i < 16  && regnum < __STROBE_CNTR_REGNUM;
-		     i++, regnum++) {
-				tmp = ov5640_read_reg(__STROBE_CNTR_ADDR + regnum, &temp);
-				if (tmp < 0) 
-				  seq_printf(seq, " er");
-				else 
-				  seq_printf(seq, " %02x", temp);
-		}
-		seq_printf(seq,"\n");
-	}
-
-	return 0;
-}
-
-static int ov5640_proc_open(struct inode *inode, struct  file *file) {
-  return single_open(file, ov5640_read_proc, PDE_DATA(inode));
-}
-
-static const struct file_operations wl_proc_fops = {
-  .owner = THIS_MODULE,
-  .open = ov5640_proc_open,
-  .read = seq_read,
-  .llseek = seq_lseek,
-  .release = single_release,  
-};
-
-//----------------------------------------------------------------------------
 
 static int prev_sysclk, prev_HTS;
 static int AE_low, AE_high, AE_Target = 52;
@@ -2795,6 +2603,9 @@ static int ov5640_download_autofocus(void)
 	return sval;
 }
 
+
+
+
 static int trigger_auto_focus(void){
         ov5640_write_reg(CMD_ACK, 0x01);
 	ov5640_write_reg(CMD_MAIN, 0x03);
@@ -2890,7 +2701,7 @@ static int ov5640_init_mode(enum ov5640_frame_rate frame_rate,
 		if (retval < 0)
 			goto err;
 
-                retval = ov5640_download_autofocus();
+                retval = ov5640_download_autofocus();    
 		if (retval < 0) {
 			pr_err("%s: error downloading autofocus firmware\n",
 			       __func__);
@@ -2923,11 +2734,7 @@ static int ov5640_init_mode(enum ov5640_frame_rate frame_rate,
 	ov5640_write_reg(0x3a00, 0x78);
 
 	/* add delay to wait for sensor stable */
-	if (mode == ov5640_mode_QSXGA_2592_1944) {
-		/* dump the first two frames: 1/7.5*2
-		 * the frame rate of QSXGA is 7.5fps */
-		msec_wait4stable = 267;
-	} else if (frame_rate == ov5640_15_fps) {
+	if (frame_rate == ov5640_15_fps) {
 		/* dump the first nine frames: 1/15*9 */
 		msec_wait4stable = 600;
 	} else if (frame_rate == ov5640_30_fps) {
@@ -3003,31 +2810,10 @@ static int ioctl_s_power(struct v4l2_int_device *s, int on)
 {
 	struct sensor_data *sensor = s->priv;
 
-	if (on && !sensor->on) {
-		if (io_regulator)
-			if (regulator_enable(io_regulator) != 0)
-				return -EIO;
-		if (core_regulator)
-			if (regulator_enable(core_regulator) != 0)
-				return -EIO;
-		if (gpo_regulator)
-			if (regulator_enable(gpo_regulator) != 0)
-				return -EIO;
-		if (analog_regulator)
-			if (regulator_enable(analog_regulator) != 0)
-				return -EIO;
+	if (on && !sensor->on) {		
 		/* Make sure power on */
 		ov5640_standby(0);
 	} else if (!on && sensor->on) {
-		if (analog_regulator)
-			regulator_disable(analog_regulator);
-		if (core_regulator)
-			regulator_disable(core_regulator);
-		if (io_regulator)
-			regulator_disable(io_regulator);
-		if (gpo_regulator)
-			regulator_disable(gpo_regulator);
-
 		ov5640_standby(1);
 	}
 
@@ -3523,6 +3309,43 @@ static struct v4l2_int_device ov5640_int_device = {
 	},
 };
 
+static int my_open(struct inode *i, struct file *f)
+{
+	pr_info("ov5640 open\n");
+    return 0;
+}
+static int my_close(struct inode *i, struct file *f)
+{
+	pr_info("ov5640 closed\n");
+    return 0;
+}
+
+static long my_ioctl(struct file *f, unsigned int cmd, unsigned long arg)
+{   
+	int ret = 0;
+	switch (cmd)
+    	{
+        case 0xCA:
+            pr_info("UNREGISTER V4l ov5640\n");
+	    v4l2_int_device_unregister(&ov5640_int_device);
+		pr_info(" ov5640 V4L2 UNREG DONE\n");
+            break;
+        case 0xCB:
+            ret = v4l2_int_device_register(&ov5640_int_device);
+	    pr_debug(" ov5640  v4l2 device created, status is %d\n", ret);
+	    pr_info("ov5640 v4l2 dev created\n");
+            break;      
+    	} 
+    	return 0;
+}
+
+static struct file_operations Fops = {
+	.owner = THIS_MODULE,
+	.open = my_open,
+	.release = my_close,
+	.unlocked_ioctl = my_ioctl
+};
+
 static ssize_t show_reg(struct device *dev,
 			struct device_attribute *attr, char *buf)
 {
@@ -3662,13 +3485,6 @@ static int ov5640_probe(struct i2c_client *client,
 
 	ov5640_standby(0);
 
-#ifndef __USE_PROC_ENTRY
-#define __PROC_ENTRY_NAME 		"ov5640-regs"
-
-	proc_file_entry = proc_create_data(__PROC_ENTRY_NAME, 0644, NULL, &wl_proc_fops, NULL);
-	if( proc_file_entry == NULL )  return -ENOMEM;
-#endif
-
 	retval = ov5640_read_reg(OV5640_CHIP_ID_HIGH_BYTE, &chip_id_high);
 	if (retval < 0 || chip_id_high != 0x56) {
 		pr_warning("camera ov5640_mipi is not found\n");
@@ -3684,14 +3500,17 @@ static int ov5640_probe(struct i2c_client *client,
 
 	sensor->virtual_channel = sensor->csi | (sensor->ipu_id << 1);
 	ov5640_standby(1);
+	int ret = 0;
+	ret = register_chrdev(201, 
+		         "ov5640",
+		         &Fops);
+	pr_debug("   FOPS, status is %d\n", ret);
 
 	ov5640_int_device.priv = &ov5640_data;
 	retval = v4l2_int_device_register(&ov5640_int_device);
-
+	//retval = 0;
 //	clk_disable_unprepare(ov5640_data.sensor_clk);
 
-	if (device_create_file(dev, &dev_attr_ov5640_reg))
-		dev_err(dev, "%s: error creating ov5640_reg entry\n", __func__);
 	pr_info("camera ov5640_mipi is found\n");
 	return retval;
 }
@@ -3705,18 +3524,6 @@ static int ov5640_probe(struct i2c_client *client,
 static int ov5640_remove(struct i2c_client *client)
 {
 	v4l2_int_device_unregister(&ov5640_int_device);
-
-	if (gpo_regulator)
-		regulator_disable(gpo_regulator);
-
-	if (analog_regulator)
-		regulator_disable(analog_regulator);
-
-	if (core_regulator)
-		regulator_disable(core_regulator);
-
-	if (io_regulator)
-		regulator_disable(io_regulator);
 
 	return 0;
 }
