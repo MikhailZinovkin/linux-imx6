@@ -69,6 +69,7 @@
 		};
 	};
 
+#if 1
 	wlcore {
 		compatible = "wlcore";
 		gpio = <177>;   /* The wl8 driver expects gpio to be an integer, so gpio6_17 is (6-1)*32+17=207
@@ -78,6 +79,7 @@
 		/* if a 12xx card is there, configure the clock to WL12XX_REFCLOCK_38_XTAL */
 		board-ref-clock = <4>;
 	};
+#endif
 
 	wlan_en_reg: fixedregulator@2 {
 		compatible = "regulator-fixed";
@@ -807,6 +809,17 @@
 	non-removable;
 	cap-power-off-card;
 	status = "okay";
+#if 0
+	#address-cells = <1>;
+	#size-cells = <0>;
+    wlcore: wlcore@0 {
+        compatible = "ti,wlcore";
+        reg = <2>;
+        interrupt-parent = <&gpio6>;
+        interrupts = <17 0>;
+        platform-quirks = <1>;
+    };
+#endif 
 };
 
 &usdhc2 {	/* uSDHC2, MMC/SD card */
