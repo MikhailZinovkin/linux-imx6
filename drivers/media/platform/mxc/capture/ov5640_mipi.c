@@ -85,6 +85,8 @@ enum ov5640_frame_rate {
 	ov5640_30_fps
 };
 
+static int isAttached = 0;
+
 static int ov5640_framerates[] = {
 	[ov5640_15_fps] = 15,
 	[ov5640_30_fps] = 30,
@@ -2882,7 +2884,7 @@ static int ioctl_s_parm(struct v4l2_int_device *s, struct v4l2_streamparm *a)
 	enum ov5640_frame_rate frame_rate;
 	enum ov5640_mode orig_mode;
 	int ret = 0;
-
+	
 	/* Make sure power on */
 	ov5640_standby(0);
 
@@ -2919,7 +2921,8 @@ static int ioctl_s_parm(struct v4l2_int_device *s, struct v4l2_streamparm *a)
 			pr_err(" The camera frame rate is not supported!\n");
 			return -EINVAL;
 		}
-
+		pr_info("========= %s:\n", __func__);
+		pr_info("Reinit ov5640 in ioctls_s_parm %s:\n", __func__);
 		orig_mode = sensor->streamcap.capturemode;
 		ret = ov5640_init_mode(frame_rate,
 				(u32)a->parm.capture.capturemode, orig_mode);
@@ -3203,7 +3206,9 @@ static int ioctl_dev_init(struct v4l2_int_device *s)
 	int ret;
 	enum ov5640_frame_rate frame_rate;
 	void *mipi_csi2_info;
-
+	
+	pr_info("========= %s:\n", __func__);
+	pr_info("Reinit ov5640 here???? %s:\n", __func__);	
 	ov5640_data.on = true;
 
 	/* mclk */
@@ -3250,7 +3255,7 @@ static int ioctl_dev_init(struct v4l2_int_device *s)
 static int ioctl_dev_exit(struct v4l2_int_device *s)
 {
 	void *mipi_csi2_info;
-
+	//pr_info("IOCTL DEV EXIT!%s:\n", __func__);
 	mipi_csi2_info = mipi_csi2_get_info();
 
 	/* disable mipi csi2 */
@@ -3322,20 +3327,28 @@ static int my_close(struct inode *i, struct file *f)
 
 static long my_ioctl(struct file *f, unsigned int cmd, unsigned long arg)
 {   
-	int ret = 0;
+   
 	switch (cmd)
-    	{
+    {
         case 0xCA:
-            pr_info("UNREGISTER V4l ov5640\n");
-	    v4l2_int_device_unregister(&ov5640_int_device);
-		pr_info(" ov5640 V4L2 UNREG DONE\n");
-            break;
-        case 0xCB:
-            ret = v4l2_int_device_register(&ov5640_int_device);
-	    pr_debug(" ov5640  v4l2 device created, status is %d\n", ret);
-	    pr_info("ov5640 v4l2 dev created\n");
-            break;      
-    	} 
+	    if(isAttached)
+            {	
+	     v4l2_int_device_unregister(&ov5640_int_device);
+	     pr_info("OV564) detached\n");
+             isAttached = 0;
+	    }
+            break;	
+        case 0xCB:	
+            if(!isAttached)
+	    {
+	      v4l2_int_device_register(&ov5640_int_device);
+	      pr_info("OV5640 attached\n");
+              isAttached = 1;
+            }
+            break; 	
+	case 0xCC:
+	    break;    
+    }
     	return 0;
 }
 
@@ -3392,7 +3405,7 @@ static int ov5640_probe(struct i2c_client *client,
 	int retval;
 	u8 chip_id_high, chip_id_low;
 	struct sensor_data *sensor = &ov5640_data;
-
+			
 	/* request power down pin */
 	pwn_gpio = of_get_named_gpio(dev->of_node, "pwn-gpios", 0);
 	if (!gpio_is_valid(pwn_gpio)) {
@@ -3507,10 +3520,10 @@ static int ov5640_probe(struct i2c_client *client,
 	pr_debug("   FOPS, status is %d\n", ret);
 
 	ov5640_int_device.priv = &ov5640_data;
-	retval = v4l2_int_device_register(&ov5640_int_device);
-	//retval = 0;
+	//retval = v4l2_int_device_register(&ov5640_int_device);
+	retval = 0;
 //	clk_disable_unprepare(ov5640_data.sensor_clk);
-
+        isAttached = 0;
 	pr_info("camera ov5640_mipi is found\n");
 	return retval;
 }
@@ -3523,7 +3536,9 @@ static int ov5640_probe(struct i2c_client *client,
  */
 static int ov5640_remove(struct i2c_client *client)
 {
-	v4l2_int_device_unregister(&ov5640_int_device);
+        if(isAttached){
+		v4l2_int_device_unregister(&ov5640_int_device);
+	}
 
 	return 0;
 }
