@@ -32,10 +32,10 @@
 		reg_usb_otg_vbus: usb_otg_vbus {
 			compatible = "regulator-fixed";
 			regulator-name = "usb_otg_vbus";
-			regulator-min-microvolt = <5000000>;
+			regulator-min-microvolt = <5000000>;        
 			regulator-max-microvolt = <5000000>;
-			gpio = <&gpio4 15 0>;
-			enable-active-low; //was high
+			gpio = <&gpio4 15 0>; 
+			enable-active-high; //was low
 		};
 
 		reg_usb_h1_vbus: usb_h1_vbus {
@@ -43,8 +43,8 @@
 			regulator-name = "usb_h1_vbus";
 			regulator-min-microvolt = <5000000>;
 			regulator-max-microvolt = <5000000>;
-            gpio = <&gpio1 28 0>;
-            enable-active-low; //was high
+            		gpio = <&gpio1 28 0>;
+            		enable-active-high; //was low
 		};
 
 		reg_audio: tlv320aic3x_supply {
@@ -434,6 +434,7 @@
         pinctrl-0 = <&pinctrl_i2c3_3>;
         status = "okay";
 
+	#if 0 
 	ft5x06_ts@38 {
 			compatible = "focaltech,5x06";
 			reg = <0x38>;
@@ -465,6 +466,7 @@
                  compatible = "dallas,ds1307";
                  reg = <0x68>;
 	};
+#endif
 };
 
 &iomuxc {
@@ -491,7 +493,7 @@
 				/* USBOTG ID pin */
 //				MX6QDL_PAD_GPIO_4__GPIO1_IO04			0x80000000
 #endif
-
+				MX6QDL_PAD_KEY_ROW2__GPIO4_IO11			0x80000000    
 				/* PMIC INT */
 				MX6QDL_PAD_GPIO_17__GPIO7_IO12			0x80000000
 				/* Wifi Slow Clock */
@@ -687,13 +689,14 @@
 	status = "okay";
 };
 
+#if 0
 &pcie {
 	reset-gpio    = <&gpio4 11 0>;		/* gpio pin number of power good signal */
 	wake-up-gpio  = <&gpio4 31 1>;		/* gpio pin number of incoming wakeup signal */
  	disable-gpio  = <&gpio5 5 0>;		/* gpio pin number of outgoing rfkill/endpoint disable signal */
 	status = "okay";
 };
-
+#endif
 
 &pwm2 {
 	pinctrl-names = "default";
