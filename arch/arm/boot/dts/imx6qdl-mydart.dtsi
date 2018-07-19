@@ -491,7 +491,10 @@
 				/* USBOTG ID pin */
 //				MX6QDL_PAD_GPIO_4__GPIO1_IO04			0x80000000
 #endif
-				MX6QDL_PAD_KEY_ROW2__GPIO4_IO11			0x80000000    
+				MX6QDL_PAD_KEY_ROW2__GPIO4_IO11			0x80000000   
+				MX6QDL_PAD_DISP0_DAT5__GPIO4_IO26		0x80000000 
+				MX6QDL_PAD_DISP0_DAT6__GPIO4_IO27		0x80000000 // USB
+				MX6QDL_PAD_DISP0_DAT7__GPIO4_IO28		0x80000000 //ETH
 				/* PMIC INT */
 				MX6QDL_PAD_GPIO_17__GPIO7_IO12			0x80000000
 				/* Wifi Slow Clock */
@@ -573,10 +576,10 @@
 	#define GP_GS2971_RESET		<&gpio4 25 GPIO_ACTIVE_LOW>
 				MX6QDL_PAD_DISP0_DAT4__GPIO4_IO25		0x000b0		/* 0 - pin C7 - reset */
 	#endif
-	#define GP_GS2971_RC_BYPASS	<&gpio4 27 GPIO_ACTIVE_HIGH>
-				MX6QDL_PAD_DISP0_DAT6__GPIO4_IO27	0x000b0		/* 0 - pin G3 - RC bypass - output is buffered(low) */
-	#define GP_GS2971_IOPROC_EN	<&gpio4 28 GPIO_ACTIVE_HIGH>
-				MX6QDL_PAD_DISP0_DAT7__GPIO4_IO28	0x000b0		/* 0 - pin H8 - io(A/V) processor enable */
+	//#define GP_GS2971_RC_BYPASS	<&gpio4 27 GPIO_ACTIVE_HIGH>
+				//MX6QDL_PAD_DISP0_DAT6__GPIO4_IO27	0x000b0		/* 0 - pin G3 - RC bypass - output is buffered(low) */
+	//#define GP_GS2971_IOPROC_EN	<&gpio4 28 GPIO_ACTIVE_HIGH>
+				//MX6QDL_PAD_DISP0_DAT7__GPIO4_IO28	0x000b0		/* 0 - pin H8 - io(A/V) processor enable */
 	#define GP_GS2971_AUDIO_EN	<&gpio4 29 GPIO_ACTIVE_HIGH>
 				MX6QDL_PAD_DISP0_DAT8__GPIO4_IO29	0x000b0		/* 0 - pin H3 - Audio Enable */
 	#define GP_GS2971_TIM_861	<&gpio4 16 GPIO_ACTIVE_HIGH>
@@ -593,8 +596,8 @@
 				MX6QDL_PAD_EIM_DA15__GPIO3_IO15		0x1b0b0		/* pin C6 - stat5 - DATA error */
 	#define GP_GS2971_LB_CONT	<&gpio3 20 GPIO_INPUT>
 				MX6QDL_PAD_EIM_D20__GPIO3_IO20		0x1b0b0		/* pin A3 - LB control - float, analog input */
-	#define GP_GS2971_Y_1ANC	<&gpio4 26 GPIO_INPUT>
-				MX6QDL_PAD_DISP0_DAT5__GPIO4_IO26	0x1b0b0		/* pin C5 - stat4 - 1ANC - Y signal detect */
+	//#define GP_GS2971_Y_1ANC	<&gpio4 26 GPIO_INPUT>
+			//	MX6QDL_PAD_DISP0_DAT5__GPIO4_IO26	0x1b0b0		/* pin C5 - stat4 - 1ANC - Y signal detect */
 			>;
 		};
 
@@ -873,16 +876,16 @@
 		rst-gpios = GP_GS2971_RESET;		/* 0 - reset */
 		tim_861-gpios = GP_GS2971_TIM_861;	/* 0 - TIM861 timing format sav/eav codes */
 		/* enable on power up */
-		ioproc_en-gpios = GP_GS2971_IOPROC_EN;	/* 0 - io(A/V) processor disabled */
+		//ioproc_en-gpios = GP_GS2971_IOPROC_EN;	/* 0 - io(A/V) processor disabled */
 		sw_en-gpios = GP_GS2971_SW_EN;		/* 0 - line lock disabled */
-		rc_bypass-gpios = GP_GS2971_RC_BYPASS;	/* 0 -  RC bypass - output is buffered(low) */
+		//rc_bypass-gpios = GP_GS2971_RC_BYPASS;	/* 0 -  RC bypass - output is buffered(low) */
 		audio_en-gpios = GP_GS2971_AUDIO_EN;	/* 0 - audio disabled */
 		dvb_asi-gpios = GP_GS2971_DVB_ASI;	/* 0 - dvs_asi disabled */
 		smpte_bypass-gpios = GP_GS2971_SMPTE_BYPASS;	/* in */
 		dvi_lock-gpios = GP_GS2971_DVI_LOCK;	/* in */
 		data_err-gpios = GP_GS2971_DATA_ERR;	/* in */
 		lb_cont-gpios = GP_GS2971_LB_CONT;	/* in */
-		y_1anc-gpios = GP_GS2971_Y_1ANC;	/* in */
+		//y_1anc-gpios = GP_GS2971_Y_1ANC;	/* in */
 	};
 };
 
