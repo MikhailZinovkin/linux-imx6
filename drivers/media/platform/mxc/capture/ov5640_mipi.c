@@ -51,6 +51,8 @@
 #define pr_debug(fmt, ...) printk(KERN_ERR pr_fmt(fmt), ##__VA_ARGS__)
 #endif
 
+#define MAKE_FLIP 1
+#define REMOVE_FLIP 2
 
 #define OV5640_VOLTAGE_ANALOG               2800000
 #define OV5640_VOLTAGE_DIGITAL_CORE         1500000
@@ -86,6 +88,7 @@ enum ov5640_frame_rate {
 };
 
 static int isAttached = 0;
+static int needFlip = 0;
 
 static int ov5640_framerates[] = {
 	[ov5640_15_fps] = 15,
@@ -1770,6 +1773,8 @@ static struct reg_value ov5640_setting_15fps_720P_1280_720[] = {
 	{0x3824, 0x04, 0, 0}, {0x5001, 0x83, 0, 0},
 };
 
+
+
 static struct reg_value ov5640_setting_30fps_1080P_1920_1080[] = {
 	{0x3008, 0x42, 0, 0},
 	{0x3035, 0x21, 0, 0}, {0x3036, 0x54, 0, 0}, {0x3c07, 0x08, 0, 0},
@@ -2053,6 +2058,40 @@ static s32 ov5640_read_reg(u16 reg, u8 *val)
 	*val = buf[0];
 	pr_debug("%s(mipi):reg=%x,val=%x\n", __func__, reg, buf[0]);
 	return buf[0];
+}
+
+
+static void set_camera_mirror_flip(uint8_t type)
+{
+    u8 regval;
+    u8 regval2;
+
+    ov5640_read_reg(0x3821 , &regval2);
+    ov5640_read_reg(0x3820 , &regval);    
+      
+    pr_info("0x3820 before flip reg = 0x%x\n", regval);
+    pr_info("0x3821 before flip reg = 0x%x\n", regval2);
+    switch(type)
+    {
+        case MAKE_FLIP:
+            regval |= 0x06;
+	    regval2 &= ~0x06;
+            break;
+
+        case REMOVE_FLIP:
+            regval &= ~0x06;
+            regval2 &= ~0x06;      
+            break;      
+    }
+    pr_info("0x3820 after flip reg = 0x%x\n", regval);
+    pr_info("0x3821 after flip reg = 0x%x\n", regval2);
+    ov5640_write_reg(0x3820, regval);
+    ov5640_write_reg(0x3821, regval2);
+    ov5640_read_reg(0x3820 , &regval);
+    ov5640_read_reg(0x3821 , &regval2);
+    pr_info("0x3820 check flip reg = 0x%x\n", regval);
+    pr_info("0x3821 check flip reg = 0x%x\n", regval2);
+    //ov5640_write_reg(0x3821, mirror);
 }
 
 
@@ -2463,6 +2502,12 @@ static int ov5640_change_mode_exposure_calc(enum ov5640_frame_rate frame_rate,
 	if (retval < 0)
 		goto err;
 
+        if(needFlip)
+	{
+	   set_camera_mirror_flip(MAKE_FLIP);
+	   pr_info("************Flip is enabled *************!!!!!\r\n");
+	}
+
 	/* read capture VTS */
 	cap_VTS = OV5640_get_VTS();
 	cap_HTS = OV5640_get_HTS();
@@ -2567,6 +2612,12 @@ static int ov5640_change_mode_direct(enum ov5640_frame_rate frame_rate,
 	retval = ov5640_download_firmware(pModeSetting, ArySize);
 	if (retval < 0)
 		goto err;
+
+        if(needFlip)
+	{
+	   set_camera_mirror_flip(MAKE_FLIP);
+	   pr_info("************Flip is enabled *************!!!!!\r\n");
+	}
 
 	OV5640_stream_on();
 
@@ -2702,6 +2753,12 @@ static int ov5640_init_mode(enum ov5640_frame_rate frame_rate,
 		retval = ov5640_download_firmware(pModeSetting, ArySize);
 		if (retval < 0)
 			goto err;
+		
+		if(needFlip)
+		{
+  	           set_camera_mirror_flip(MAKE_FLIP);
+		   pr_info("************Flip is enabled *************!!!!!\r\n");
+		}
 
                 retval = ov5640_download_autofocus();    
 		if (retval < 0) {
@@ -2715,6 +2772,13 @@ static int ov5640_init_mode(enum ov5640_frame_rate frame_rate,
 		pModeSetting = ov5640_setting_30fps_VGA_640_480;
 		ArySize = ARRAY_SIZE(ov5640_setting_30fps_VGA_640_480);
 		retval = ov5640_download_firmware(pModeSetting, ArySize);
+		
+		if(needFlip)
+		{
+  	           set_camera_mirror_flip(MAKE_FLIP);
+		   pr_info("************Flip is enabled *************!!!!!\r\n");
+		}
+
 	} else if ((dn_mode == SUBSAMPLING && orig_dn_mode == SCALING) ||
 			(dn_mode == SCALING && orig_dn_mode == SUBSAMPLING)) {
 		/* change between subsampling and scaling
@@ -3314,6 +3378,7 @@ static struct v4l2_int_device ov5640_int_device = {
 	},
 };
 
+
 static int my_open(struct inode *i, struct file *f)
 {
 	pr_info("ov5640 open\n");
@@ -3347,6 +3412,9 @@ static long my_ioctl(struct file *f, unsigned int cmd, unsigned long arg)
             }
             break; 	
 	case 0xCC:
+	   // set_camera_mirror_flip(2);
+	    needFlip = 1;
+	    pr_info(" FLIP VIDEO is ON!\n");
 	    break;    
     }
     	return 0;
