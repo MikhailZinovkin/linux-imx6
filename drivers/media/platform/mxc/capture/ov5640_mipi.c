@@ -2797,7 +2797,8 @@ static int ov5640_init_mode(enum ov5640_frame_rate frame_rate,
 	OV5640_get_light_freq();
 	OV5640_set_bandingfilter();
 	ov5640_set_virtual_channel(ov5640_data.virtual_channel);
-	ov5640_write_reg(0x3a00, 0x78);
+	//err: ov5640_write_reg(0x3a00, 0x78);
+
 
 	/* add delay to wait for sensor stable */
 	if (frame_rate == ov5640_15_fps) {
@@ -2839,6 +2840,8 @@ static int ov5640_init_mode(enum ov5640_frame_rate frame_rate,
 		}
 		pr_debug("MIPI CSI2 ERROR STATUS IS: %x\n", mipi_reg);
 	}
+	//msleep(10);
+	ov5640_write_reg(0x3a00, 0x78);
 err:
 	return retval;
 }
