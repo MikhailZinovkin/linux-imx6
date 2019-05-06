@@ -1966,7 +1966,7 @@ static s32 update_device_addr(struct sensor_data *sensor)
 
 static void ov5640_reset(void)
 {
-	//mxc_camera_common_lock();
+	mxc_camera_common_lock();
 
 	/* camera reset */
 	gpio_set_value(rst_gpio, 1);
@@ -1985,7 +1985,7 @@ static void ov5640_reset(void)
 	msleep(20);
 	pr_debug("%s(mipi): reset released\n", __func__);
 	update_device_addr(&ov5640_data);
-	//mxc_camera_common_unlock();
+	mxc_camera_common_unlock();
 
 	gpio_set_value(pwn_gpio, 1);
 }
