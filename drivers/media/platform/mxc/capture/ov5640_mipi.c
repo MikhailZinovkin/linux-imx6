@@ -1935,7 +1935,7 @@ static void ov5640_standby(s32 enable)
 	else
 		gpio_set_value(pwn_gpio, 0);
 	pr_debug("ov5640_mipi_camera_powerdown: powerdown=%x, power_gp=0x%x\n", enable, pwn_gpio);
-	msleep(2);
+	msleep(100);
 }
 
 static s32 update_device_addr(struct sensor_data *sensor)
