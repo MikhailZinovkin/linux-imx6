@@ -28,3 +28,8 @@ obj-$(CONFIG_MXC_VIDEO_GS2971) += gs2971_video.o
 
 adv7282_tvin-objs := adv7282.o
 obj-$(CONFIG_MXC_TVIN_ADV7282) += adv7282_tvin.o
+
+nvp6324-objs := nvp6324_dev.o
+obj-$(CONFIG_NVP6324) += nvp6324.o
+
+#nvp6324_video.o nvp6324_video_eq.o nvp6324_mipi.o

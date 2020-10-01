@@ -345,6 +345,38 @@ int mipi_csi2_reset_pal(struct mipi_csi2_info *info)
 	return 0;
 }
 EXPORT_SYMBOL(mipi_csi2_reset_pal);
+
+
+int mipi_csi2_reset_ahd(struct mipi_csi2_info *info)
+{
+	_mipi_csi2_lock(info);
+ 
+	mipi_csi2_write(info, 0x0, MIPI_CSI2_PHY_SHUTDOWNZ);
+	mipi_csi2_write(info, 0x0, MIPI_CSI2_DPHY_RSTZ);
+	mipi_csi2_write(info, 0x0, MIPI_CSI2_CSI2_RESETN);
+
+	mipi_csi2_write(info, 0x00000001, MIPI_CSI2_PHY_TST_CTRL0);
+	mipi_csi2_write(info, 0x00000000, MIPI_CSI2_PHY_TST_CTRL1);
+	mipi_csi2_write(info, 0x00000000, MIPI_CSI2_PHY_TST_CTRL0);
+	mipi_csi2_write(info, 0x00000002, MIPI_CSI2_PHY_TST_CTRL0);
+	mipi_csi2_write(info, 0x00010044, MIPI_CSI2_PHY_TST_CTRL1);
+	mipi_csi2_write(info, 0x00000000, MIPI_CSI2_PHY_TST_CTRL0);
+	//mipi_csi2_write(info, 0x00000014, MIPI_CSI2_PHY_TST_CTRL1);
+
+	mipi_csi2_write(info, 0x00000032, MIPI_CSI2_PHY_TST_CTRL1); //  750-800MHz
+	//mipi_csi2_write(info, 0x00000026, MIPI_CSI2_PHY_TST_CTRL1);
+	mipi_csi2_write(info, 0x00000002, MIPI_CSI2_PHY_TST_CTRL0);
+	mipi_csi2_write(info, 0x00000000, MIPI_CSI2_PHY_TST_CTRL0);
+
+	mipi_csi2_write(info, 0xffffffff, MIPI_CSI2_PHY_SHUTDOWNZ);
+	mipi_csi2_write(info, 0xffffffff, MIPI_CSI2_DPHY_RSTZ);
+	mipi_csi2_write(info, 0xffffffff, MIPI_CSI2_CSI2_RESETN);
+
+	_mipi_csi2_unlock(info);
+
+	return 0;
+}
+EXPORT_SYMBOL(mipi_csi2_reset_ahd);
 /*!
  * This function is called to get mipi csi2 info.
  *
