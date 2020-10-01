@@ -358,6 +358,7 @@
 		reg = <0x50>;
 	};
 
+#if 0
 	ov5640_mipi: ov5640_mipi@3c {
 		compatible = "ovti,ov5640_mipi";      
 		reg = <0x3c>;
@@ -373,6 +374,20 @@
 		csi_id = <1>;
 		mclk = <24000000>;
 		mclk_source = <0>;
+	};
+#endif
+
+	nvp6324_mipi@30 {      
+		compatible = "nextchip,nvp6324_mipi";
+		reg = <0x30>;
+		pinctrl-names = "default";
+		clocks = <&clks 200>;
+		clock-names = "csi_mclk";
+		mclk = <27000000>;
+		mclk_source = <0>;
+		csi_id = <0>;
+		mipi_camera = <1>;
+		ipu_id = <1>;
 	};
 
 	/*tca6408: gpio@20 {
