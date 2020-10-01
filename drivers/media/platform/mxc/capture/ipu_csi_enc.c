@@ -86,7 +86,7 @@ static int csi_enc_setup(cam_data *cam)
 
 	memset(&params, 0, sizeof(ipu_channel_params_t));
 	params.csi_mem.csi = cam->csi;
-
+#if 0
 	sensor_protocol = ipu_csi_get_sensor_protocol(cam->ipu, cam->csi);
 	switch (sensor_protocol) {
 	case IPU_CSI_CLK_MODE_GATED_CLK:
@@ -105,6 +105,37 @@ static int csi_enc_setup(cam_data *cam)
 		printk(KERN_ERR "sensor protocol unsupported\n");
 		return -EINVAL;
 	}
+#else
+    int interlacedGated = ipu_csi_get_interlaced_mode();
+
+    sensor_protocol = ipu_csi_get_sensor_protocol(cam->ipu, cam->csi);
+
+    if(interlacedGated) {
+      pr_info("_____params.csi_mem.interlaced gated mode on - set interlaced to true_____\r\n");
+      params.csi_mem.interlaced = true;
+    }
+    else{
+      switch (sensor_protocol) {
+        case IPU_CSI_CLK_MODE_GATED_CLK:
+        case IPU_CSI_CLK_MODE_NONGATED_CLK:
+        case IPU_CSI_CLK_MODE_CCIR656_PROGRESSIVE:
+        case IPU_CSI_CLK_MODE_CCIR1120_PROGRESSIVE_DDR:
+        case IPU_CSI_CLK_MODE_CCIR1120_PROGRESSIVE_SDR:
+          pr_info("_____params.csi_mem.interlaced false_____\r\n");
+          params.csi_mem.interlaced = false;
+          break;
+        case IPU_CSI_CLK_MODE_CCIR656_INTERLACED:
+        case IPU_CSI_CLK_MODE_CCIR1120_INTERLACED_DDR:
+        case IPU_CSI_CLK_MODE_CCIR1120_INTERLACED_SDR:
+          pr_info("_____params.csi_mem.interlaced true_____\r\n");
+          params.csi_mem.interlaced = true;
+          break;
+        default:
+          printk(KERN_ERR "sensor protocol unsupported\n");
+          return -EINVAL;
+      }
+    }
+#endif
 
 	if (cam->v2f.fmt.pix.pixelformat == V4L2_PIX_FMT_YUV420)
 		pixel_fmt = IPU_PIX_FMT_YUV420P;

@@ -928,3 +928,22 @@ void _ipu_csi_wait4eof(struct ipu_soc *ipu, ipu_channel_t channel)
 	ipu_free_irq(ipu, irq, ipu);
 	dev_dbg(ipu->dev, "CSI stop timeout - %d * 10ms\n", 5 - ret);
 }
+
+#if 1
+static uint8_t g_interlacedGated = 0;
+
+void ipu_csi_set_interlaced_mode(uint8_t state)
+{
+  g_interlacedGated = state;
+}
+
+EXPORT_SYMBOL(ipu_csi_set_interlaced_mode);
+
+uint8_t ipu_csi_get_interlaced_mode(void)
+{
+  return g_interlacedGated;
+}
+
+EXPORT_SYMBOL(ipu_csi_get_interlaced_mode);
+
+#endif

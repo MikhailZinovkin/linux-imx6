@@ -141,6 +141,8 @@ enum {
 
 	/* module cs5345: just ident 5345 */
 	V4L2_IDENT_CS5345 = 5345,
+	//addons
+	V4L2_IDENT_NVP6324 = 6324,
 
 	/* module tea6415c: just ident 6415 */
 	V4L2_IDENT_TEA6415C = 6415,

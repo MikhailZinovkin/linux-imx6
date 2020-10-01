@@ -758,4 +758,7 @@ struct ipuv3_fb_platform_data {
 	bool                            late_init;
 };
 
+uint8_t ipu_csi_get_interlaced_mode(void);
+void ipu_csi_set_interlaced_mode(uint8_t state);
+
 #endif /* __LINUX_IPU_V3_H_ */
