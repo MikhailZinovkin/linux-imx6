@@ -13,6 +13,7 @@
  * http://www.gnu.org/copyleft/gpl.html
  *
  */
+#include <dt-bindings/clock/imx6sx-clock.h>
 
 / {
 	aliases {
@@ -381,7 +382,7 @@
 		compatible = "nextchip,nvp6324_mipi";
 		reg = <0x30>;
 		pinctrl-names = "default";
-		clocks = <&clks 200>;
+		clocks = <&clks IMX6SX_CLK_SSI3_IPG>;
 		clock-names = "csi_mclk";
 		mclk = <27000000>;
 		mclk_source = <0>;
