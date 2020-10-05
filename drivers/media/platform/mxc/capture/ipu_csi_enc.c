@@ -83,11 +83,12 @@ static int csi_enc_setup(cam_data *cam)
 		printk(KERN_ERR "cam private is NULL\n");
 		return -ENXIO;
 	}
-
 	memset(&params, 0, sizeof(ipu_channel_params_t));
 	params.csi_mem.csi = cam->csi;
-#if 0
+#if 1
 	sensor_protocol = ipu_csi_get_sensor_protocol(cam->ipu, cam->csi);
+    printk(KERN_INFO "======================= sensor_protocol= %u\n", sensor_protocol);
+    
 	switch (sensor_protocol) {
 	case IPU_CSI_CLK_MODE_GATED_CLK:
 	case IPU_CSI_CLK_MODE_NONGATED_CLK:
