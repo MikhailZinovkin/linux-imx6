@@ -1880,9 +1880,9 @@ int nvp6324_video_init(void)
 	{
 	    case FMT_CVBS_H720_PAL:		  
 	      nvp6324_data.sen.pix.width = 720;
-	      nvp6324_data.sen.pix.height = 480;
+	      nvp6324_data.sen.pix.height = 576;
 	      nvp6324_data.sen.spix.swidth = 720;
-	      nvp6324_data.sen.spix.sheight = 480;
+	      nvp6324_data.sen.spix.sheight = 625;
 	      nvp6324_data.sen.streamcap.timeperframe.denominator = 25;
 	      nvp6324_data.sen.streamcap.timeperframe.numerator = 1;
 	      nvp6324_data.sen.spix.top = 0;		
@@ -2224,7 +2224,7 @@ static int ioctl_g_ifparm(struct v4l2_int_device *s, struct v4l2_ifparm *p)
 
 	/* Initialize structure to 0s then set any non-0 values. */
 	memset(p, 0, sizeof(*p));
-#if 1
+#if 0
 	p->if_type = V4L2_IF_TYPE_BT656; /* This is the only possibility. */
 	p->u.bt656.mode = V4L2_IF_TYPE_BT656_MODE_NOBT_8BIT;
 #else

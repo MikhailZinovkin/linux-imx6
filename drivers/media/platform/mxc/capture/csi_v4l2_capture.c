@@ -1945,6 +1945,7 @@ static long csi_v4l_do_ioctl(struct file *file,
 	case VIDIOC_S_STD: {
 		v4l2_std_id *e = arg;
 		pr_debug("   case VIDIOC_S_STD\n");
+        printk(KERN_DEBUG "----------------------------- case VIDIOC_S_STD\n");
 		retval = csi_v4l_s_std(cam, *e);
 
 		break;

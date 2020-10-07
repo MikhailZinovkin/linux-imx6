@@ -64,6 +64,8 @@ int _ipu_csi_mclk_set(struct ipu_soc *ipu, uint32_t pixel_clk, uint32_t csi)
 	ipu_csi_write(ipu, csi, temp |
 			(div_ratio << CSI_SENS_CONF_DIVRATIO_SHIFT),
 			CSI_SENS_CONF);
+    dev_info(ipu->dev, "---!!--- CSI_SENS_CONF = 0x%08X\n",
+		ipu_csi_read(ipu, csi, CSI_SENS_CONF));
 
 	return 0;
 }
@@ -211,9 +213,9 @@ pr_debug("DTA TEST passage dans le type CCIR BT interlaced");
 pr_debug("DTA TEST passage dans le type GATED CLK");
 	}
 
-	dev_dbg(ipu->dev, "CSI_SENS_CONF = 0x%08X\n",
+	dev_info(ipu->dev, "CSI_SENS_CONF = 0x%08X\n",
 		ipu_csi_read(ipu, csi, CSI_SENS_CONF));
-	dev_dbg(ipu->dev, "CSI_ACT_FRM_SIZE = 0x%08X\n",
+	dev_info(ipu->dev, "CSI_ACT_FRM_SIZE = 0x%08X\n",
 		ipu_csi_read(ipu, csi, CSI_ACT_FRM_SIZE));
 
 	mutex_unlock(&ipu->mutex_lock);
@@ -864,10 +866,18 @@ int _ipu_csi_init(struct ipu_soc *ipu, ipu_channel_t channel, uint32_t csi)
 	}
 	csi_sens_conf |= csi_dest << CSI_SENS_CONF_DATA_DEST_SHIFT;
 
-	dev_dbg(ipu->dev, "%s:CSI_SENS_CONF: ipu=%p,csi=%x,data=%x, channel=%x\n", __func__,
+	dev_info(ipu->dev, "%s:CSI_SENS_CONF: ipu=%p,csi=%x,data=%x, channel=%x\n", __func__,
 			ipu, csi, csi_sens_conf, channel);
 	ipu_csi_write(ipu, csi, ctrl, CSI_CPD_CTRL);
 	ipu_csi_write(ipu, csi, csi_sens_conf, CSI_SENS_CONF);
+    
+    dev_info(ipu->dev, "======!!===== CSI_SENS_CONF = 0x%08X\n", ipu_csi_read(ipu, csi, CSI_SENS_CONF));
+    dev_info(ipu->dev, "======!!===== CSI_SENS_FRM_SIZE = 0x%08X\n", ipu_csi_read(ipu, csi, CSI_SENS_FRM_SIZE));
+    dev_info(ipu->dev, "======!!===== CSI_ACT_FRM_SIZE = 0x%08X\n", ipu_csi_read(ipu, csi, CSI_ACT_FRM_SIZE));
+    dev_info(ipu->dev, "======!!===== CSI_OUT_FRM_CTRL = 0x%08X\n", ipu_csi_read(ipu, csi, CSI_OUT_FRM_CTRL));
+    dev_info(ipu->dev, "======!!===== CSI_CCIR_CODE_1 = 0x%08X\n", ipu_csi_read(ipu, csi, CSI_CCIR_CODE_1));
+    dev_info(ipu->dev, "======!!===== CSI_CCIR_CODE_2 = 0x%08X\n", ipu_csi_read(ipu, csi, CSI_CCIR_CODE_2));
+    dev_info(ipu->dev, "======!!===== CSI_CCIR_CODE_3 = 0x%08X\n", ipu_csi_read(ipu, csi, CSI_CCIR_CODE_3));
 err:
 	return retval;
 }
