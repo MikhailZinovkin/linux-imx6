@@ -85,7 +85,7 @@ static int csi_enc_setup(cam_data *cam)
 	}
 	memset(&params, 0, sizeof(ipu_channel_params_t));
 	params.csi_mem.csi = cam->csi;
-#if 0
+#if 1
 	sensor_protocol = ipu_csi_get_sensor_protocol(cam->ipu, cam->csi);
     printk(KERN_INFO "======================= sensor_protocol= %u\n", sensor_protocol);
     

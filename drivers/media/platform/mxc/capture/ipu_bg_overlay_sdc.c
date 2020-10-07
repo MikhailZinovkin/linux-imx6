@@ -129,6 +129,7 @@ static int csi_enc_setup(cam_data *cam)
 	ipu_channel_params_t params;
 	u32 pixel_fmt;
 	int err = 0, sensor_protocol = 0;
+    printk(KERN_ERR "====================================!!!!!!!!===========================\n");
 
 	if (!cam) {
 		printk(KERN_ERR "cam private is NULL\n");

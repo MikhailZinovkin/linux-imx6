@@ -1602,12 +1602,13 @@ exit:
 static int mxc_v4l2_s_std(cam_data *cam, v4l2_std_id e)
 {
 	pr_debug("%s: %Lx\n", __func__, e);
+	printk( KERN_DEBUG  "-------------!!-------- %s: %Lx\n", __func__, e);
 	if (e == V4L2_STD_PAL) {
-		pr_debug("   Setting standard to PAL %Lx\n", V4L2_STD_PAL);
+		printk("   Setting standard to PAL %Lx\n", V4L2_STD_PAL);
 		cam->standard.id = V4L2_STD_PAL;
 		video_index = TV_PAL;
 	} else if (e == V4L2_STD_NTSC) {
-		pr_debug("   Setting standard to NTSC %Lx\n",
+		printk("   Setting standard to NTSC %Lx\n",
 				V4L2_STD_NTSC);
 		/* Get rid of the white dot line in NTSC signal input */
 		cam->standard.id = V4L2_STD_NTSC;
@@ -1615,7 +1616,7 @@ static int mxc_v4l2_s_std(cam_data *cam, v4l2_std_id e)
 	} else {
 		cam->standard.id = V4L2_STD_ALL;
 		video_index = TV_NOT_LOCKED;
-		pr_err("ERROR: unrecognized std! %Lx (PAL=%Lx, NTSC=%Lx\n",
+		printk("ERROR: unrecognized std! %Lx (PAL=%Lx, NTSC=%Lx\n",
 			e, V4L2_STD_PAL, V4L2_STD_NTSC);
 	}
 
@@ -2453,6 +2454,7 @@ static long mxc_v4l_do_ioctl(struct file *file,
 	case VIDIOC_S_STD: {
 		v4l2_std_id *e = arg;
 		pr_debug("   case VIDIOC_S_STD\n");
+        printk(KERN_DEBUG "----------!!--------- case VIDIOC_S_STD\n");
 		retval = mxc_v4l2_s_std(cam, *e);
 
 		break;

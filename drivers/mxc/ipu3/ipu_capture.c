@@ -870,7 +870,17 @@ int _ipu_csi_init(struct ipu_soc *ipu, ipu_channel_t channel, uint32_t csi)
 			ipu, csi, csi_sens_conf, channel);
 	ipu_csi_write(ipu, csi, ctrl, CSI_CPD_CTRL);
 	ipu_csi_write(ipu, csi, csi_sens_conf, CSI_SENS_CONF);
-    
+#if 0
+	ipu_csi_write(ipu, csi, 0x04000A30, CSI_SENS_CONF); 
+	ipu_csi_write(ipu, csi, 0x027002CF, CSI_SENS_FRM_SIZE); 
+	ipu_csi_write(ipu, csi, 0x023F02CF, CSI_ACT_FRM_SIZE); 
+	ipu_csi_write(ipu, csi, 0x00000000, CSI_OUT_FRM_CTRL); 
+	ipu_csi_write(ipu, csi, 0x00040596, CSI_CCIR_CODE_1); 
+	ipu_csi_write(ipu, csi, 0x000D07DF, CSI_CCIR_CODE_2); 
+	ipu_csi_write(ipu, csi, 0x00FF0000, CSI_CCIR_CODE_3);
+#endif
+
+#if 1
     dev_info(ipu->dev, "======!!===== CSI_SENS_CONF = 0x%08X\n", ipu_csi_read(ipu, csi, CSI_SENS_CONF));
     dev_info(ipu->dev, "======!!===== CSI_SENS_FRM_SIZE = 0x%08X\n", ipu_csi_read(ipu, csi, CSI_SENS_FRM_SIZE));
     dev_info(ipu->dev, "======!!===== CSI_ACT_FRM_SIZE = 0x%08X\n", ipu_csi_read(ipu, csi, CSI_ACT_FRM_SIZE));
@@ -878,6 +888,7 @@ int _ipu_csi_init(struct ipu_soc *ipu, ipu_channel_t channel, uint32_t csi)
     dev_info(ipu->dev, "======!!===== CSI_CCIR_CODE_1 = 0x%08X\n", ipu_csi_read(ipu, csi, CSI_CCIR_CODE_1));
     dev_info(ipu->dev, "======!!===== CSI_CCIR_CODE_2 = 0x%08X\n", ipu_csi_read(ipu, csi, CSI_CCIR_CODE_2));
     dev_info(ipu->dev, "======!!===== CSI_CCIR_CODE_3 = 0x%08X\n", ipu_csi_read(ipu, csi, CSI_CCIR_CODE_3));
+#endif
 err:
 	return retval;
 }
