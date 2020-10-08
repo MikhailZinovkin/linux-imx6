@@ -169,7 +169,7 @@ int nvp6324_chanState(uint8_t state, uint8_t ch)
       nvp6324_write_reg(0x9F, tmp_reg); //Power down description2 Powerdwon_TimeMultiflex1~4
       tmp_reg ^= 0x0F;
       nvp6324_write_reg(0x97, tmp_reg); //Power down description2 CH_Reset1~4
-      nvp6324_data.arb_enable &= ~((1<<ch)|(1<<ch+4));
+      nvp6324_data.arb_enable &= ~((1<<ch)|(1<<(ch+4)));
       dev_info(&nvp6324_data.sen.i2c_client->dev,"nvp6324 channel num:%d down\n", ch);
       //arb	
       if(nvp6324_data.lanes == 4) //4lane
@@ -221,7 +221,7 @@ int nvp6324_chanState(uint8_t state, uint8_t ch)
       nvp6324_write_reg(0x9F, tmp_reg); //Power down description2 Powerdwon_TimeMultiflex1~4
       tmp_reg ^= 0x0F;
       nvp6324_write_reg(0x97, tmp_reg); //Power down description2 CH_Reset1~4
-      nvp6324_data.arb_enable |= ((1<<ch)|(1<<ch+4));
+      nvp6324_data.arb_enable |= ((1<<ch)|(1<<(ch+4)));
       dev_info(&nvp6324_data.sen.i2c_client->dev,"nvp6324 channel num:%d up\n", ch);
       //arb	
       if(nvp6324_data.lanes == 4) //4lane
@@ -1719,7 +1719,7 @@ int nvp6324_chip_initialize(uint8_t pvifmt[], uint16_t lane, uint16_t pclk, uint
 		nvp6324_write_reg(0x9F, tmp_reg); //Power down description2 Powerdwon_TimeMultiflex1~4
 		tmp_reg ^= 0x0F;
 		nvp6324_write_reg(0x97, tmp_reg); //Power down description2 CH_Reset1~4
-		nvp6324_data.arb_enable &= ~((1<<ch)|(1<<ch+4));
+		nvp6324_data.arb_enable &= ~((1<<ch)|(1<<(ch+4)));
 		dev_info(&nvp6324_data.sen.i2c_client->dev,"nvp6324 Video Input[NOT_USED] ch:%d down\n", ch);
         }
     }
@@ -1986,7 +1986,7 @@ static int nvp6324_probe(struct i2c_client *client,
     dev_info(&nvp6324_data.sen.i2c_client->dev, "nvp6324_data.sen.mclk=%d from devicetree.\n", nvp6324_data.sen.mclk);
 
 	ret = of_property_read_u32(dev->of_node, "mclk_source",
-				   (u32*)&(nvp6324_data.sen.sensor_clk));
+				   (u32*)&(nvp6324_data.sen.mclk_source));
 	if (ret) {
 		dev_err(dev, "mclk_source missing or invalid\n");
 		return ret;
@@ -2086,7 +2086,7 @@ MODULE_LICENSE("GPL");
 MODULE_VERSION("1.0");
 MODULE_ALIAS("CSI");
 
-
+//-------------------------------------------------------------------------------------------------------------------
 static int nvp6324_init_csi(void)      
 {
 	void *mipi_csi2_info;
@@ -2224,7 +2224,7 @@ static int ioctl_g_ifparm(struct v4l2_int_device *s, struct v4l2_ifparm *p)
 
 	/* Initialize structure to 0s then set any non-0 values. */
 	memset(p, 0, sizeof(*p));
-#if 0
+#if 1
 	p->if_type = V4L2_IF_TYPE_BT656; /* This is the only possibility. */
 	p->u.bt656.mode = V4L2_IF_TYPE_BT656_MODE_NOBT_8BIT;
 #else
