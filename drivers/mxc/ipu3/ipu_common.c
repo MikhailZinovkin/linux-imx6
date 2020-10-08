@@ -750,7 +750,102 @@ int32_t ipu_init_channel(struct ipu_soc *ipu, ipu_channel_t channel, ipu_channel
 
 		/*CSI data (include compander) dest*/
 		_ipu_csi_init(ipu, channel, params->csi_prp_vf_mem.csi);
-		_ipu_ic_init_prpvf(ipu, params, true);
+		_ipu_ic_init_prpvf(ipu, channel, params, true);
+		break;
+	case CSI_VDI_MEM:
+		if (params->csi_vdi_mem.csi > 1) {
+			ret = -EINVAL;
+			goto err;
+		}
+		if ((ipu->using_ic_dirct_ch == MEM_VDI_PRP_VF_MEM) ||
+			(ipu->using_ic_dirct_ch == MEM_VDI_MEM)) {
+			ret = -EINVAL;
+			goto err;
+		}
+		ipu->using_ic_dirct_ch = CSI_VDI_MEM;
+
+		ipu->ic_use_count++;
+		ipu->vdi_use_count++;
+		ipu->csi_channel[params->csi_vdi_mem.csi] = channel;
+
+		if (params->csi_vdi_mem.mipi_en) {
+			ipu_conf |= (1 << (IPU_CONF_CSI0_DATA_SOURCE_OFFSET +
+				params->csi_vdi_mem.csi));
+			_ipu_csi_set_mipi_di(ipu, 0,
+				params->csi_vdi_mem.mipi_id,
+				params->csi_vdi_mem.csi);
+		} else
+			ipu_conf &= ~(1 << (IPU_CONF_CSI0_DATA_SOURCE_OFFSET +
+				params->csi_vdi_mem.csi));
+
+		/*CSI0/1 feed into IC*/
+		ipu_conf &= ~IPU_CONF_IC_INPUT;
+		if (params->csi_vdi_mem.csi)
+			ipu_conf |= IPU_CONF_CSI_SEL;
+		else
+			ipu_conf &= ~IPU_CONF_CSI_SEL;
+
+		/*PRP skip buffer in memory, only valid when RWS_EN is true*/
+		reg = ipu_cm_read(ipu, IPU_FS_PROC_FLOW1);
+		reg &= ~(FS_VDI_SRC_SEL_MASK | FS_PRP_SRC_SEL_MASK);
+		reg |= (1 << FS_VDI_SRC_SEL_OFFSET);  /*CSI to VDI*/
+		ipu_cm_write(ipu, reg, IPU_FS_PROC_FLOW1);
+
+		/*CSI data (include compander) dest*/
+		_ipu_csi_set_skip_vdi(ipu, 1, 1);
+		_ipu_csi_init(ipu, channel, params->csi_vdi_mem.csi);
+		_ipu_vdi_init(ipu, channel, params);
+
+		reg = ipu_ic_read(ipu, IC_CONF);
+		reg &= ~IC_CONF_RWS_EN;
+		reg |= IC_CONF_CSI_MEM_WR_EN;
+		ipu_ic_write(ipu, reg, IC_CONF);
+		break;
+	case CSI_VDI_PRP_VF_MEM:
+		if (params->csi_vdi_prp_mem.csi > 1) {
+			ret = -EINVAL;
+			goto err;
+		}
+		if ((ipu->using_ic_dirct_ch == MEM_VDI_PRP_VF_MEM) ||
+			(ipu->using_ic_dirct_ch == MEM_VDI_MEM)) {
+			ret = -EINVAL;
+			goto err;
+		}
+		ipu->using_ic_dirct_ch = CSI_VDI_PRP_VF_MEM;
+
+		ipu->ic_use_count++;
+		ipu->vdi_use_count++;
+		ipu->csi_channel[params->csi_vdi_prp_mem.csi] = channel;
+
+		if (params->csi_vdi_prp_mem.mipi_en) {
+			ipu_conf |= (1 << (IPU_CONF_CSI0_DATA_SOURCE_OFFSET +
+				params->csi_vdi_prp_mem.csi));
+			_ipu_csi_set_mipi_di(ipu, 0,
+				params->csi_vdi_prp_mem.mipi_id,
+				params->csi_vdi_prp_mem.csi);
+		} else
+			ipu_conf &= ~(1 << (IPU_CONF_CSI0_DATA_SOURCE_OFFSET +
+				params->csi_vdi_prp_mem.csi));
+
+		/*CSI0/1 feed into IC*/
+		ipu_conf &= ~IPU_CONF_IC_INPUT;
+		if (params->csi_vdi_prp_mem.csi)
+			ipu_conf |= IPU_CONF_CSI_SEL;
+		else
+			ipu_conf &= ~IPU_CONF_CSI_SEL;
+
+		/*PRP skip buffer in memory, only valid when RWS_EN is true*/
+		reg = ipu_cm_read(ipu, IPU_FS_PROC_FLOW1);
+		reg &= ~(FS_VDI_SRC_SEL_MASK | FS_PRP_SRC_SEL_MASK);
+		reg |= (1 << FS_VDI_SRC_SEL_OFFSET);  /*CSI to VDI*/
+		reg |= (5 << FS_PRP_SRC_SEL_OFFSET);  /*VDI to PRP*/
+		ipu_cm_write(ipu, reg | FS_VF_IN_VALID, IPU_FS_PROC_FLOW1);
+
+		/*CSI data (include compander) dest*/
+		_ipu_csi_set_skip_vdi(ipu, 1, 1);
+		_ipu_csi_init(ipu, channel, params->csi_vdi_prp_mem.csi);
+		_ipu_ic_init_prpvf(ipu, channel, params, true);
+		_ipu_vdi_init(ipu, channel, params);
 		break;
 	case MEM_PRP_VF_MEM:
 		if (params->mem_prp_vf_mem.graphics_combine_en) {
@@ -775,12 +870,14 @@ int32_t ipu_init_channel(struct ipu_soc *ipu, ipu_channel_t channel, ipu_channel
 		reg = ipu_cm_read(ipu, IPU_FS_PROC_FLOW1);
 		ipu_cm_write(ipu, reg | FS_VF_IN_VALID, IPU_FS_PROC_FLOW1);
 
-		_ipu_ic_init_prpvf(ipu, params, false);
+		_ipu_ic_init_prpvf(ipu, channel, params, false);
 		ipu->ic_use_count++;
 		break;
 	case MEM_VDI_PRP_VF_MEM:
 		if ((ipu->using_ic_dirct_ch == CSI_PRP_VF_MEM) ||
 			(ipu->using_ic_dirct_ch == MEM_VDI_MEM) ||
+			(ipu->using_ic_dirct_ch == CSI_VDI_MEM) ||
+			(ipu->using_ic_dirct_ch == CSI_VDI_PRP_VF_MEM) ||
 		     (ipu->using_ic_dirct_ch == CSI_PRP_ENC_MEM)) {
 			ret = -EINVAL;
 			goto err;
@@ -794,7 +891,7 @@ int32_t ipu_init_channel(struct ipu_soc *ipu, ipu_channel_t channel, ipu_channel
 
 		if (params->mem_prp_vf_mem.graphics_combine_en)
 			ipu->sec_chan_en[IPU_CHAN_ID(channel)] = true;
-		_ipu_ic_init_prpvf(ipu, params, false);
+		_ipu_ic_init_prpvf(ipu, channel, params, false);
 		_ipu_vdi_init(ipu, channel, params);
 		break;
 	case MEM_VDI_PRP_VF_MEM_P:
@@ -813,6 +910,11 @@ int32_t ipu_init_channel(struct ipu_soc *ipu, ipu_channel_t channel, ipu_channel
 		ipu->using_ic_dirct_ch = MEM_VDI_MEM;
 		ipu->ic_use_count++;
 		ipu->vdi_use_count++;
+
+		reg = ipu_cm_read(ipu, IPU_FS_PROC_FLOW1);
+		reg &= ~FS_VDI_SRC_SEL_MASK;
+		ipu_cm_write(ipu, reg , IPU_FS_PROC_FLOW1);
+
 		_ipu_vdi_init(ipu, channel, params);
 		break;
 	case MEM_ROT_VF_MEM:
@@ -1060,6 +1162,35 @@ void ipu_uninit_channel(struct ipu_soc *ipu, ipu_channel_t channel, ipu_channel_
 		if (ipu->using_ic_dirct_ch == CSI_PRP_VF_MEM)
 			ipu->using_ic_dirct_ch = 0;
 		_ipu_ic_uninit_prpvf(ipu);
+		if (ipu->csi_channel[0] == channel) {
+			ipu->csi_channel[0] = CHAN_NONE;
+		} else if (ipu->csi_channel[1] == channel) {
+			ipu->csi_channel[1] = CHAN_NONE;
+		}
+		break;
+	case CSI_VDI_MEM:
+		ipu->ic_use_count--;
+		ipu->vdi_use_count--;
+		if (ipu->using_ic_dirct_ch == CSI_VDI_MEM)
+			ipu->using_ic_dirct_ch = 0;
+		_ipu_vdi_uninit(ipu);
+		reg = ipu_cm_read(ipu, IPU_FS_PROC_FLOW1);
+		ipu_cm_write(ipu, reg & ~FS_VF_IN_VALID, IPU_FS_PROC_FLOW1);
+		if (ipu->csi_channel[0] == channel) {
+			ipu->csi_channel[0] = CHAN_NONE;
+		} else if (ipu->csi_channel[1] == channel) {
+			ipu->csi_channel[1] = CHAN_NONE;
+		}
+		break;
+	case CSI_VDI_PRP_VF_MEM:
+		ipu->ic_use_count--;
+		ipu->vdi_use_count--;
+		if (ipu->using_ic_dirct_ch == CSI_VDI_PRP_VF_MEM)
+			ipu->using_ic_dirct_ch = 0;
+		_ipu_ic_uninit_prpvf(ipu);
+		_ipu_vdi_uninit(ipu);
+		reg = ipu_cm_read(ipu, IPU_FS_PROC_FLOW1);
+		ipu_cm_write(ipu, reg & ~FS_VF_IN_VALID, IPU_FS_PROC_FLOW1);
 		if (ipu->csi_channel[0] == channel) {
 			ipu->csi_channel[0] = CHAN_NONE;
 		} else if (ipu->csi_channel[1] == channel) {
@@ -1808,6 +1939,12 @@ int32_t ipu_link_channels(struct ipu_soc *ipu, ipu_channel_t src_ch, ipu_channel
 			proc_dest_sel[IPU_CHAN_ID(dest_ch)] <<
 			FS_PRPVF_DEST_SEL_OFFSET;
 		break;
+	case CSI_VDI_PRP_VF_MEM:
+		fs_proc_flow2 &= ~FS_PRPVF_DEST_SEL_MASK;
+		fs_proc_flow2 |=
+			proc_dest_sel[IPU_CHAN_ID(dest_ch)] <<
+			FS_PRPVF_DEST_SEL_OFFSET;
+		break;
 	case MEM_PP_MEM:
 		fs_proc_flow2 &= ~FS_PP_DEST_SEL_MASK;
 		fs_proc_flow2 |=
@@ -2013,6 +2150,9 @@ int32_t ipu_unlink_channels(struct ipu_soc *ipu, ipu_channel_t src_ch, ipu_chann
 		fs_proc_flow2 &= ~FS_PRPENC_DEST_SEL_MASK;
 		break;
 	case CSI_PRP_VF_MEM:
+		fs_proc_flow2 &= ~FS_PRPVF_DEST_SEL_MASK;
+		break;
+	case CSI_VDI_PRP_VF_MEM:
 		fs_proc_flow2 &= ~FS_PRPVF_DEST_SEL_MASK;
 		break;
 	case MEM_PP_MEM:

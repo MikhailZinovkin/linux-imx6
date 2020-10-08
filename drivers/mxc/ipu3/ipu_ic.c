@@ -51,6 +51,18 @@ static int _calc_resize_coeffs(struct ipu_soc *ipu,
 				uint32_t *resizeCoeff,
 				uint32_t *downsizeCoeff);
 
+void _ipu_vdi_set_top_field_auto(struct ipu_soc *ipu, bool top_field_0)
+{
+	uint32_t reg;
+
+	reg = ipu_vdi_read(ipu, VDI_C);
+	if (top_field_0)
+		reg &= ~VDI_C_TOP_FIELD_AUTO_1;
+	else
+		reg |= VDI_C_TOP_FIELD_AUTO_1;
+	ipu_vdi_write(ipu, reg, VDI_C);
+}
+
 void _ipu_vdi_set_top_field_man(struct ipu_soc *ipu, bool top_field_0)
 {
 	uint32_t reg;
@@ -100,6 +112,7 @@ void _ipu_ic_enable_task(struct ipu_soc *ipu, ipu_channel_t channel)
 	ic_conf = ipu_ic_read(ipu, IC_CONF);
 	switch (channel) {
 	case CSI_PRP_VF_MEM:
+	case CSI_VDI_PRP_VF_MEM:
 	case MEM_PRP_VF_MEM:
 		ic_conf |= IC_CONF_PRPVF_EN;
 		break;
@@ -138,6 +151,7 @@ void _ipu_ic_disable_task(struct ipu_soc *ipu, ipu_channel_t channel)
 	ic_conf = ipu_ic_read(ipu, IC_CONF);
 	switch (channel) {
 	case CSI_PRP_VF_MEM:
+	case CSI_VDI_PRP_VF_MEM:
 	case MEM_PRP_VF_MEM:
 		ic_conf &= ~IC_CONF_PRPVF_EN;
 		break;
@@ -175,21 +189,47 @@ void _ipu_vdi_init(struct ipu_soc *ipu, ipu_channel_t channel, ipu_channel_param
 	uint32_t pixel_fmt;
 	uint32_t pix_per_burst;
 
-	reg = ((params->mem_prp_vf_mem.in_height-1) << 16) |
-	  (params->mem_prp_vf_mem.in_width-1);
+	if (channel == CSI_VDI_MEM) {
+		reg = ((params->csi_vdi_mem.in_height-1) << 16) |
+		  (params->csi_vdi_mem.in_width-1);
+	} else if (channel == CSI_VDI_PRP_VF_MEM) {
+		reg = ((params->csi_vdi_prp_mem.in_height-1) << 16) |
+		  (params->csi_vdi_prp_mem.in_width-1);
+	} else {
+		reg = ((params->mem_prp_vf_mem.in_height-1) << 16) |
+		  (params->mem_prp_vf_mem.in_width-1);
+	}
 	ipu_vdi_write(ipu, reg, VDI_FSIZE);
 
 	/* Full motion, only vertical filter is used
 	   Burst size is 4 accesses */
-	if (params->mem_prp_vf_mem.in_pixel_fmt ==
-	     IPU_PIX_FMT_UYVY ||
-	     params->mem_prp_vf_mem.in_pixel_fmt ==
-	     IPU_PIX_FMT_YUYV) {
-		pixel_fmt = VDI_C_CH_422;
-		pix_per_burst = 32;
-	 } else {
-		pixel_fmt = VDI_C_CH_420;
-		pix_per_burst = 64;
+	if (channel == CSI_VDI_MEM) {
+		if ((params->csi_vdi_mem.in_pixel_fmt == IPU_PIX_FMT_UYVY) ||
+				(params->csi_vdi_mem.in_pixel_fmt == IPU_PIX_FMT_YUYV)) {
+			pixel_fmt = VDI_C_CH_422;
+			pix_per_burst = 32;
+		} else {
+			pixel_fmt = VDI_C_CH_420;
+			pix_per_burst = 64;
+		}
+	} else if (channel == CSI_VDI_PRP_VF_MEM) {
+		if ((params->csi_vdi_prp_mem.in_pixel_fmt == IPU_PIX_FMT_UYVY) ||
+				(params->csi_vdi_prp_mem.in_pixel_fmt == IPU_PIX_FMT_YUYV)) {
+			pixel_fmt = VDI_C_CH_422;
+			pix_per_burst = 32;
+		} else {
+			pixel_fmt = VDI_C_CH_420;
+			pix_per_burst = 64;
+		}
+	} else {
+		if ((params->mem_prp_vf_mem.in_pixel_fmt == IPU_PIX_FMT_UYVY) ||
+				(params->mem_prp_vf_mem.in_pixel_fmt == IPU_PIX_FMT_YUYV)) {
+			pixel_fmt = VDI_C_CH_422;
+			pix_per_burst = 32;
+		} else {
+			pixel_fmt = VDI_C_CH_420;
+			pix_per_burst = 64;
+		}
 	}
 
 	reg = ipu_vdi_read(ipu, VDI_C);
@@ -219,17 +259,39 @@ void _ipu_vdi_init(struct ipu_soc *ipu, ipu_channel_t channel, ipu_channel_param
 				<< VDI_C_BURST_SIZE3_OFFSET;
 		reg |= VDI_C_VWM3_SET_2 | VDI_C_VWM3_CLR_2;
 		break;
+	case CSI_VDI_MEM:
+	case CSI_VDI_PRP_VF_MEM:
+		reg |= VDI_C_VWM1_SET_1 | VDI_C_VWM1_CLR_2;
+		reg |= VDI_C_VWM3_SET_1 | VDI_C_VWM3_CLR_2;
+		reg |= VDI_C_BURST_SIZE1_4 | VDI_C_BURST_SIZE2_4 | VDI_C_BURST_SIZE3_4;
+		break;
 	default:
 		break;
 	}
 	ipu_vdi_write(ipu, reg, VDI_C);
 
-	if (params->mem_prp_vf_mem.field_fmt == IPU_DEINTERLACE_FIELD_TOP)
-		_ipu_vdi_set_top_field_man(ipu, true);
-	else if (params->mem_prp_vf_mem.field_fmt == IPU_DEINTERLACE_FIELD_BOTTOM)
-		_ipu_vdi_set_top_field_man(ipu, false);
+	if (channel == CSI_VDI_MEM) {
+		if (params->csi_vdi_mem.field_fmt == IPU_DEINTERLACE_FIELD_TOP)
+			_ipu_vdi_set_top_field_auto(ipu, true);
+		else if (params->csi_vdi_mem.field_fmt == IPU_DEINTERLACE_FIELD_BOTTOM)
+			_ipu_vdi_set_top_field_auto(ipu, false);
 
-	_ipu_vdi_set_motion(ipu, params->mem_prp_vf_mem.motion_sel);
+		_ipu_vdi_set_motion(ipu, params->csi_vdi_mem.motion_sel);
+	} else if (channel == CSI_VDI_PRP_VF_MEM) {
+		if (params->csi_vdi_prp_mem.field_fmt == IPU_DEINTERLACE_FIELD_TOP)
+			_ipu_vdi_set_top_field_auto(ipu, true);
+		else if (params->csi_vdi_prp_mem.field_fmt == IPU_DEINTERLACE_FIELD_BOTTOM)
+			_ipu_vdi_set_top_field_auto(ipu, false);
+
+		_ipu_vdi_set_motion(ipu, params->csi_vdi_prp_mem.motion_sel);
+	} else {
+		if (params->mem_prp_vf_mem.field_fmt == IPU_DEINTERLACE_FIELD_TOP)
+			_ipu_vdi_set_top_field_man(ipu, true);
+		else if (params->mem_prp_vf_mem.field_fmt == IPU_DEINTERLACE_FIELD_BOTTOM)
+			_ipu_vdi_set_top_field_man(ipu, false);
+
+		_ipu_vdi_set_motion(ipu, params->mem_prp_vf_mem.motion_sel);
+	}
 
 	reg = ipu_ic_read(ipu, IC_CONF);
 	reg &= ~IC_CONF_RWS_EN;
@@ -242,8 +304,8 @@ void _ipu_vdi_uninit(struct ipu_soc *ipu)
 	ipu_vdi_write(ipu, 0, VDI_C);
 }
 
-int _ipu_ic_init_prpvf(struct ipu_soc *ipu, ipu_channel_params_t *params,
-		       bool src_is_csi)
+int _ipu_ic_init_prpvf(struct ipu_soc *ipu, ipu_channel_t channel,
+		       ipu_channel_params_t *params, bool src_is_csi)
 {
 	uint32_t reg, ic_conf;
 	uint32_t downsizeCoeff, resizeCoeff;
@@ -251,42 +313,79 @@ int _ipu_ic_init_prpvf(struct ipu_soc *ipu, ipu_channel_params_t *params,
 	int ret = 0;
 
 	/* Setup vertical resizing */
-	if (!params->mem_prp_vf_mem.outv_resize_ratio) {
-		ret = _calc_resize_coeffs(ipu, params->mem_prp_vf_mem.in_height,
-					params->mem_prp_vf_mem.out_height,
-					&resizeCoeff, &downsizeCoeff);
-		if (ret < 0) {
-			dev_err(ipu->dev, "failed to calculate prpvf height "
-				"scaling coefficients\n");
-			return ret;
-		}
+	if (channel == CSI_VDI_PRP_VF_MEM) {
+		if (!params->csi_vdi_prp_mem.outv_resize_ratio) {
+			ret = _calc_resize_coeffs(ipu, params->csi_vdi_prp_mem.in_height,
+						params->csi_vdi_prp_mem.out_height,
+						&resizeCoeff, &downsizeCoeff);
+			if (ret < 0) {
+				dev_err(ipu->dev, "failed to calculate vdi prpvf height "
+					"scaling coefficients\n");
+				return ret;
+			}
 
-		reg = (downsizeCoeff << 30) | (resizeCoeff << 16);
-	} else
-		reg = (params->mem_prp_vf_mem.outv_resize_ratio) << 16;
+			reg = (downsizeCoeff << 30) | (resizeCoeff << 16);
+		} else
+			reg = (params->csi_vdi_prp_mem.outv_resize_ratio) << 16;
+	} else {
+		if (!params->mem_prp_vf_mem.outv_resize_ratio) {
+			ret = _calc_resize_coeffs(ipu, params->mem_prp_vf_mem.in_height,
+						params->mem_prp_vf_mem.out_height,
+						&resizeCoeff, &downsizeCoeff);
+			if (ret < 0) {
+				dev_err(ipu->dev, "failed to calculate prpvf height "
+					"scaling coefficients\n");
+				return ret;
+			}
+
+			reg = (downsizeCoeff << 30) | (resizeCoeff << 16);
+		} else
+			reg = (params->mem_prp_vf_mem.outv_resize_ratio) << 16;
+	}
 
 	/* Setup horizontal resizing */
-	if (!params->mem_prp_vf_mem.outh_resize_ratio) {
-		ret = _calc_resize_coeffs(ipu, params->mem_prp_vf_mem.in_width,
-					params->mem_prp_vf_mem.out_width,
-					&resizeCoeff, &downsizeCoeff);
-		if (ret < 0) {
-			dev_err(ipu->dev, "failed to calculate prpvf width "
-				"scaling coefficients\n");
-			return ret;
-		}
+	if (channel == CSI_VDI_PRP_VF_MEM) {
+		if (!params->csi_vdi_prp_mem.outh_resize_ratio) {
+			ret = _calc_resize_coeffs(ipu, params->csi_vdi_prp_mem.in_width,
+						params->csi_vdi_prp_mem.out_width,
+						&resizeCoeff, &downsizeCoeff);
+			if (ret < 0) {
+				dev_err(ipu->dev, "failed to calculate vdi prpvf width "
+					"scaling coefficients\n");
+				return ret;
+			}
 
-		reg |= (downsizeCoeff << 14) | resizeCoeff;
-	} else
-		reg |= params->mem_prp_vf_mem.outh_resize_ratio;
+			reg |= (downsizeCoeff << 14) | resizeCoeff;
+		} else
+			reg |= params->csi_vdi_prp_mem.outh_resize_ratio;
+	} else {
+		if (!params->mem_prp_vf_mem.outh_resize_ratio) {
+			ret = _calc_resize_coeffs(ipu, params->mem_prp_vf_mem.in_width,
+						params->mem_prp_vf_mem.out_width,
+						&resizeCoeff, &downsizeCoeff);
+			if (ret < 0) {
+				dev_err(ipu->dev, "failed to calculate prpvf width "
+					"scaling coefficients\n");
+				return ret;
+			}
+
+			reg |= (downsizeCoeff << 14) | resizeCoeff;
+		} else
+			reg |= params->mem_prp_vf_mem.outh_resize_ratio;
+	}
 
 	ipu_ic_write(ipu, reg, IC_PRP_VF_RSC);
 
 	ic_conf = ipu_ic_read(ipu, IC_CONF);
 
 	/* Setup color space conversion */
-	in_fmt = format_to_colorspace(params->mem_prp_vf_mem.in_pixel_fmt);
-	out_fmt = format_to_colorspace(params->mem_prp_vf_mem.out_pixel_fmt);
+	if (channel == CSI_VDI_PRP_VF_MEM) {
+		in_fmt = format_to_colorspace(params->csi_vdi_prp_mem.in_pixel_fmt);
+		out_fmt = format_to_colorspace(params->csi_vdi_prp_mem.out_pixel_fmt);
+	} else {
+		in_fmt = format_to_colorspace(params->mem_prp_vf_mem.in_pixel_fmt);
+		out_fmt = format_to_colorspace(params->mem_prp_vf_mem.out_pixel_fmt);
+	}
 	if (in_fmt == RGB) {
 		if ((out_fmt == YCbCr) || (out_fmt == YUV)) {
 			/* Enable RGB->YCBCR CSC1 */
@@ -303,7 +402,7 @@ int _ipu_ic_init_prpvf(struct ipu_soc *ipu, ipu_channel_params_t *params,
 			/* TODO: Support YUV<->YCbCr conversion? */
 		}
 	}
-
+#if 0
 	if (params->mem_prp_vf_mem.graphics_combine_en) {
 		ic_conf |= IC_CONF_PRPVF_CMB;
 
@@ -357,6 +456,65 @@ int _ipu_ic_init_prpvf(struct ipu_soc *ipu, ipu_channel_params_t *params,
 		ic_conf |= IC_CONF_RWS_EN;
 #endif
 	ipu_ic_write(ipu, ic_conf, IC_CONF);
+#else
+	if (channel == CSI_VDI_PRP_VF_MEM) {
+		ic_conf &= ~IC_CONF_PRPVF_CMB;
+	} else {
+		if (params->mem_prp_vf_mem.graphics_combine_en) {
+			ic_conf |= IC_CONF_PRPVF_CMB;
+
+			if (!(ic_conf & IC_CONF_PRPVF_CSC1)) {
+				/* need transparent CSC1 conversion */
+				_init_csc(ipu, IC_TASK_VIEWFINDER, RGB, RGB, 1);
+				ic_conf |= IC_CONF_PRPVF_CSC1;  /* Enable RGB->RGB CSC */
+			}
+			in_fmt = format_to_colorspace(params->mem_prp_vf_mem.in_g_pixel_fmt);
+			out_fmt = format_to_colorspace(params->mem_prp_vf_mem.out_pixel_fmt);
+			if (in_fmt == RGB) {
+				if ((out_fmt == YCbCr) || (out_fmt == YUV)) {
+					/* Enable RGB->YCBCR CSC2 */
+					_init_csc(ipu, IC_TASK_VIEWFINDER, RGB, out_fmt, 2);
+					ic_conf |= IC_CONF_PRPVF_CSC2;
+				}
+			}
+			if ((in_fmt == YCbCr) || (in_fmt == YUV)) {
+				if (out_fmt == RGB) {
+					/* Enable YCBCR->RGB CSC2 */
+					_init_csc(ipu, IC_TASK_VIEWFINDER, YCbCr, RGB, 2);
+					ic_conf |= IC_CONF_PRPVF_CSC2;
+				} else {
+					/* TODO: Support YUV<->YCbCr conversion? */
+				}
+			}
+
+			if (params->mem_prp_vf_mem.global_alpha_en) {
+				ic_conf |= IC_CONF_IC_GLB_LOC_A;
+				reg = ipu_ic_read(ipu, IC_CMBP_1);
+				reg &= ~(0xff);
+				reg |= params->mem_prp_vf_mem.alpha;
+				ipu_ic_write(ipu, reg, IC_CMBP_1);
+			} else
+				ic_conf &= ~IC_CONF_IC_GLB_LOC_A;
+
+			if (params->mem_prp_vf_mem.key_color_en) {
+				ic_conf |= IC_CONF_KEY_COLOR_EN;
+				ipu_ic_write(ipu, params->mem_prp_vf_mem.key_color,
+						IC_CMBP_2);
+			} else
+				ic_conf &= ~IC_CONF_KEY_COLOR_EN;
+		} else {
+			ic_conf &= ~IC_CONF_PRPVF_CMB;
+		}
+	}
+
+	if (src_is_csi) {
+		ic_conf &= ~IC_CONF_RWS_EN;
+		ic_conf &= ~IC_CONF_CSI_MEM_WR_EN;
+	} else
+		ic_conf |= IC_CONF_RWS_EN;
+
+	ipu_ic_write(ipu, ic_conf, IC_CONF);
+#endif
 
 	return ret;
 }

@@ -122,6 +122,24 @@ config MXC_IPU_CSI_ENC
 	  Use case IPU_CSI_ENC:
 		Get raw image with CSI from smart sensor for encoder.
 		CSI -> MEM
+
+config MXC_IPU_VDI_PRP_ENC
+	tristate "IPU CSI to VDI to Pre-processor Encoder library"
+	depends on VIDEO_MXC_IPU_CAMERA
+	default y
+	---help---
+	  Use case VDI_PRP_ENC:
+		Preprocessing image from smart sensor for encoder.
+		CSI -> VDI -> IC (PRP ENC) -> MEM
+
+config MXC_IPU_VDI_ENC
+	tristate "IPU CSI VDI Encoder library"
+	depends on VIDEO_MXC_IPU_CAMERA
+	default y
+	---help---
+	  Use case IPU_VDI_ENC:
+		Get raw image with CSI->VDI from smart sensor for encoder.
+		CSI -> VDI -> MEM
 endmenu
 
 endif

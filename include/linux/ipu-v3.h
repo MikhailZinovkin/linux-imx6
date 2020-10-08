@@ -84,6 +84,12 @@ typedef enum {
 	/* fake channel for vdoa to link with IPU */
 	MEM_VDOA_MEM =  _MAKE_CHAN(27, NO_DMA, NO_DMA, NO_DMA, NO_DMA),
 
+	/* for csi->vdi-mem */
+	CSI_VDI_MEM = _MAKE_CHAN(28, NO_DMA, NO_DMA, NO_DMA, 5),
+
+	/* for csi->vdi->ic->mem */
+	CSI_VDI_PRP_VF_MEM = _MAKE_CHAN(29, NO_DMA, NO_DMA, NO_DMA, 21),
+
 	MEM_PP_ADC = CHAN_NONE,
 	ADC_SYS2 = CHAN_NONE,
 
@@ -153,6 +159,38 @@ typedef union {
 		uint32_t csi;
 		struct mipi_fields mipi;
 	} csi_prp_enc_mem;
+	struct {
+		uint32_t in_width;
+		uint32_t in_height;
+		uint32_t in_pixel_fmt;
+		uint32_t out_width;
+		uint32_t out_height;
+		uint32_t out_pixel_fmt;
+		bool interlaced;
+		enum v4l2_field field_fmt;
+		ipu_motion_sel motion_sel;
+		uint32_t csi;
+		uint32_t mipi_id;
+		uint32_t mipi_vc;
+		bool mipi_en;
+	} csi_vdi_mem;
+	struct {
+		uint32_t in_width;
+		uint32_t in_height;
+		uint32_t in_pixel_fmt;
+		uint32_t out_width;
+		uint32_t out_height;
+		uint32_t out_pixel_fmt;
+		uint32_t outh_resize_ratio;
+		uint32_t outv_resize_ratio;
+		bool interlaced;
+		enum v4l2_field field_fmt;
+		ipu_motion_sel motion_sel;
+		uint32_t csi;
+		uint32_t mipi_id;
+		uint32_t mipi_vc;
+		bool mipi_en;
+	} csi_vdi_prp_mem;
 	struct {
 		uint32_t in_width;
 		uint32_t in_height;
