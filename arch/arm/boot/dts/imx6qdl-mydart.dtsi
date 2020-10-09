@@ -13,7 +13,6 @@
  * http://www.gnu.org/copyleft/gpl.html
  *
  */
-#include <dt-bindings/clock/imx6sx-clock.h>
 
 / {
 	aliases {
@@ -382,13 +381,15 @@
 		compatible = "nextchip,nvp6324_mipi";
 		reg = <0x30>;
 		pinctrl-names = "default";
-		clocks = <&clks IMX6SX_CLK_SSI3_IPG>;
+		clocks = <&clks 200>;
 		clock-names = "csi_mclk";
 		mclk = <27000000>;
 		mclk_source = <0>;
 		csi_id = <0>;
 		mipi_camera = <1>;
 		ipu_id = <1>;
+        v_channel;  //unused
+        lanes = <4>;
 	};
 
 	/*tca6408: gpio@20 {

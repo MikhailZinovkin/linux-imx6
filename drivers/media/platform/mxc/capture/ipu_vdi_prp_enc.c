@@ -432,6 +432,8 @@ static int vdi_prp_enc_enabling_tasks(void *private)
 	return err;
 }
 
+//#include <linux/ipu-v3.h>
+
 /*!
  * Disable encoder task
  * @param private       struct cam_data * mxc capture instance
@@ -457,9 +459,9 @@ static int vdi_prp_enc_disabling_tasks(void *private)
 	if (cam->rotation >= IPU_ROTATE_90_RIGHT)
 		err |= ipu_disable_channel(cam->ipu, MEM_ROT_ENC_MEM, true);
 
-	ipu_uninit_channel(cam->ipu, CSI_VDI_PRP_VF_MEM);
+	ipu_uninit_channel(cam->ipu, CSI_VDI_PRP_VF_MEM ,0);
 	if (cam->rotation >= IPU_ROTATE_90_RIGHT)
-		ipu_uninit_channel(cam->ipu, MEM_ROT_ENC_MEM);
+		ipu_uninit_channel(cam->ipu, MEM_ROT_ENC_MEM, 0);
 
 	if (cam->dummy_frame.vaddress != 0) {
 		dma_free_coherent(0, cam->dummy_frame.buffer.length,

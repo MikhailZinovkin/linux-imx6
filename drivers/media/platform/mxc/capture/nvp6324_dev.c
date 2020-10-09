@@ -2108,7 +2108,7 @@ static int nvp6324_init_csi(void)
 		return;
 	}
   
-	mipi_csi2_set_lanes(mipi_csi2_info, 4);  /////     
+	mipi_csi2_set_lanes(mipi_csi2_info/*, 4*/);  /////     //set lines in dts
 	
 	mipi_csi2_reset_ahd(mipi_csi2_info);
 

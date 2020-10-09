@@ -268,6 +268,8 @@ static int vdi_enc_enabling_tasks(void *private)
 	return err;
 }
 
+//#include <linux/ipu-v3.h>
+
 /*!
  * Disable encoder task
  * @param private       struct cam_data * mxc capture instance
@@ -286,7 +288,7 @@ static int vdi_enc_disabling_tasks(void *private)
 
 	err = ipu_disable_channel(cam->ipu, CSI_VDI_MEM, true);
 
-	ipu_uninit_channel(cam->ipu, CSI_VDI_MEM);
+	ipu_uninit_channel(cam->ipu, CSI_VDI_MEM, 0);
 
 	if (cam->dummy_frame.vaddress != 0) {
 		dma_free_coherent(0, cam->dummy_frame.buffer.length,
