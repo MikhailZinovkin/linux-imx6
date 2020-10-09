@@ -201,8 +201,8 @@
 
 	v4l2_cap_0:	v4l2_cap_0 {
 		compatible = "fsl,imx6q-v4l2-capture";
-		ipu_id = <0>;
-		csi_id = <1>;
+		ipu_id = <1>;
+		csi_id = <0>;
 		mclk_source = <0>;
 		status = "okay";
 	};
@@ -385,11 +385,10 @@
 		clock-names = "csi_mclk";
 		mclk = <27000000>;
 		mclk_source = <0>;
-		csi_id = <0>;
+		csi_id = <1>;
 		mipi_camera = <1>;
-		ipu_id = <1>;
-        v_channel;  //unused
-        lanes = <4>;
+		ipu_id = <0>;
+        //lanes = <4>;
 	};
 
 	/*tca6408: gpio@20 {
@@ -695,8 +694,8 @@
 	status = "okay";
 	ipu_id = <0>;
 	csi_id = <1>;
-	v_channel = <0>;
-	lanes = <2>;
+	v_channel = <1>; //<0>;
+	lanes = <4>; //<2>;
 };
 
 &dcic1 {

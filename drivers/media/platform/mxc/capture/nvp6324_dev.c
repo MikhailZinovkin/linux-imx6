@@ -1887,6 +1887,7 @@ int nvp6324_video_init(void)
 	      nvp6324_data.sen.streamcap.timeperframe.numerator = 1;
 	      nvp6324_data.sen.spix.top = 0;		
 	      nvp6324_data.sen.spix.left = 0;
+		  nvp6324_data.sen.pix.priv = 1;
 	      ipu_csi_set_interlaced_mode(1);
 	      dev_info(&nvp6324_data.sen.i2c_client->dev, "nvp6324 video mode = FMT_CVBS_H720_PAL\n");
 	      break;
@@ -1939,7 +1940,8 @@ int nvp6324_video_init(void)
 	dev_info(&nvp6324_data.sen.i2c_client->dev, "nvp6324_data.curr_height = %d\n", nvp6324_data.curr_height);
 	dev_info(&nvp6324_data.sen.i2c_client->dev, "nvp6324_data.curr_fps = %d\n", nvp6324_data.curr_fps);
 	
-	uint8_t vifmt[4] = {0, 0, nvp6324_data.curr_mod, 0};
+	//v1 uint8_t vifmt[4] = {0, 0, nvp6324_data.curr_mod, 0};
+	uint8_t vifmt[4] = {0, nvp6324_data.curr_mod, 0, 0};
 	
 	nvp6324_data.lanes = MIPI_LANES_4;
 	nvp6324_data.pixformat = YUV422_TYPE;
@@ -1947,7 +1949,7 @@ int nvp6324_video_init(void)
 	nvp6324_data.arb_scale = 0;
         nvp6324_data.arb_enable = 0xFF;
     
-	nvp6324_chip_initialize(vifmt, MIPI_LANES_4, PCLK_756MHZ, YUV422_TYPE);
+	nvp6324_chip_initialize(vifmt, nvp6324_data.lanes, nvp6324_data.pclk, nvp6324_data.pixformat);
 	
 	dev_info(&nvp6324_data.sen.i2c_client->dev, "nvp6324 video init done\n");
 
@@ -2086,13 +2088,15 @@ MODULE_LICENSE("GPL");
 MODULE_VERSION("1.0");
 MODULE_ALIAS("CSI");
 
+#define W_CH  1
+
 //-------------------------------------------------------------------------------------------------------------------
 static int nvp6324_init_csi(void)      
 {
 	void *mipi_csi2_info;
 	u32 mipi_reg;     
 		
-	nvp6324_chanState(0, 2);
+	nvp6324_chanState(0, W_CH);
 	
 	mipi_csi2_info = mipi_csi2_get_info();
 
@@ -2114,7 +2118,7 @@ static int nvp6324_init_csi(void)
 
  	mipi_csi2_set_datatype(mipi_csi2_info, MIPI_DT_YUV422);
 	
-	nvp6324_chanState(1, 2);
+	nvp6324_chanState(1, W_CH);
 	
 	msleep(800);//wait stable
 	if (mipi_csi2_info) {
@@ -2236,7 +2240,7 @@ static int ioctl_g_ifparm(struct v4l2_int_device *s, struct v4l2_ifparm *p)
 	p->u.bt656.clock_min = 27000000;
 	p->u.bt656.clock_max  = 27000000;
     //p->u.bt656.bt_sync_correct = 1;  /* Indicate external vsync */
-#if 1
+#if 0
     p->u.bt656.mode = V4L2_IF_TYPE_BT656_MODE_NOBT_8BIT;
 	//p->u.bt656.nobt_hs_inv = 0;
 	//p->u.bt656.bt_sync_correct = 0;
