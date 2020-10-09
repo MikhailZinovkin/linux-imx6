@@ -2108,7 +2108,7 @@ static int nvp6324_init_csi(void)
 		return;
 	}
   
-	mipi_csi2_set_lanes(mipi_csi2_info/*, 4*/);  /////     //set lines in dts
+	mipi_csi2_set_lanes(mipi_csi2_info, 4);  /////     //set lanes in dts
 	
 	mipi_csi2_reset_ahd(mipi_csi2_info);
 
@@ -2236,6 +2236,12 @@ static int ioctl_g_ifparm(struct v4l2_int_device *s, struct v4l2_ifparm *p)
 	p->u.bt656.clock_min = 27000000;
 	p->u.bt656.clock_max  = 27000000;
     //p->u.bt656.bt_sync_correct = 1;  /* Indicate external vsync */
+#if 1
+    p->u.bt656.mode = V4L2_IF_TYPE_BT656_MODE_NOBT_8BIT;
+	//p->u.bt656.nobt_hs_inv = 0;
+	//p->u.bt656.bt_sync_correct = 0;
+	p->u.bt656.clock_curr = 0;  //BT656 interlace clock mode
+#endif
 	dev_info(&nvp6324_data.sen.i2c_client->dev, "nvp6324 ioctl_g_ifparm clock = %d\n" , p->u.bt656.clock_curr);	
 
 	return 0;

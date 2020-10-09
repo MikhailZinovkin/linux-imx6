@@ -164,9 +164,10 @@ int mipi_csi2_set_lanes(struct mipi_csi2_info *info, unsigned lanes)
 EXPORT_SYMBOL(mipi_csi2_set_lanes);
 #else
 
-unsigned int mipi_csi2_set_lanes(struct mipi_csi2_info *info)
+unsigned int mipi_csi2_set_lanes(struct mipi_csi2_info *info, unsigned lanes)
 {
-	unsigned int lanes;
+	//unsigned int lanes;
+    info->lanes = lanes;
 
 	_mipi_csi2_lock(info);
 	mipi_csi2_write(info, info->lanes - 1, MIPI_CSI2_N_LANES);

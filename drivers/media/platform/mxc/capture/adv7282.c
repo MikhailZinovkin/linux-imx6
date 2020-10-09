@@ -951,7 +951,7 @@ static void adv7282_initDev(uint8_t flag)
 		return -1;
 	}
 
-	mipi_csi2_set_lanes(mipi_csi2_info/*, 1*/); //set lines in dts
+	mipi_csi2_set_lanes(mipi_csi2_info, 1); //set lanes in dts
 
 	if(flag == INIT_FLAG )
 		mipi_csi2_reset_pal(mipi_csi2_info);
