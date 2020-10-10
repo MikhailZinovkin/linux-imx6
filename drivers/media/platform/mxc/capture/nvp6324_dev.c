@@ -1880,9 +1880,9 @@ int nvp6324_video_init(void)
 	{
 	    case FMT_CVBS_H720_PAL:		  
 	      nvp6324_data.sen.pix.width = 720;
-	      nvp6324_data.sen.pix.height = 576;
+	      nvp6324_data.sen.pix.height = 576/2;
 	      nvp6324_data.sen.spix.swidth = 720;
-	      nvp6324_data.sen.spix.sheight = 625;
+	      nvp6324_data.sen.spix.sheight =  576/2; //625/2;
 	      nvp6324_data.sen.streamcap.timeperframe.denominator = 25;
 	      nvp6324_data.sen.streamcap.timeperframe.numerator = 1;
 	      nvp6324_data.sen.spix.top = 0;		
@@ -2240,7 +2240,7 @@ static int ioctl_g_ifparm(struct v4l2_int_device *s, struct v4l2_ifparm *p)
 	p->u.bt656.clock_min = 27000000;
 	p->u.bt656.clock_max  = 27000000;
     //p->u.bt656.bt_sync_correct = 1;  /* Indicate external vsync */
-#if 0
+#if 1
     p->u.bt656.mode = V4L2_IF_TYPE_BT656_MODE_NOBT_8BIT;
 	//p->u.bt656.nobt_hs_inv = 0;
 	//p->u.bt656.bt_sync_correct = 0;
