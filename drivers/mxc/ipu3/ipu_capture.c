@@ -662,38 +662,6 @@ err:
 }
 
 /*!
- * _ipu_csi_set_skip_vdi
- *
- * @param	ipu		ipu handler
- * @param	skip		select frames to be skipped and set the
- *				correspond bits to 1
- * @param	max_ratio	number of frames in a skipping set and the
- *				maximum value of max_ratio is 11
- *
- * @return	Returns 0 on success or negative error code on fail
- */
-int _ipu_csi_set_skip_vdi(struct ipu_soc *ipu, uint32_t skip,
-	uint32_t max_ratio)
-{
-	uint32_t temp;
-	int retval = 0;
-
-	if (max_ratio > 11) {
-		retval = -EINVAL;
-		goto err;
-	}
-
-	temp = ipu_cm_read(ipu, IPU_SKIP);
-	temp &= ~(SKIP_VDI_MAX_RATIO_SKIP_MASK | SKIP_VDI_SKIP_MASK);
-	temp |= (max_ratio << SKIP_VDI_MAX_RATIO_SKIP_SHIFT) |
-			(skip << SKIP_VDI_SKIP_SHIFT);
-	ipu_cm_write(ipu, temp, IPU_SKIP);
-
-err:
-	return retval;
-}
-
-/*!
  * _ipu_smfc_init
  *	Map CSI frames to IDMAC channels.
  *
@@ -889,8 +857,6 @@ int _ipu_csi_init(struct ipu_soc *ipu, ipu_channel_t channel, uint32_t csi)
 		break;
 	case CSI_PRP_ENC_MEM:
 	case CSI_PRP_VF_MEM:
-	case CSI_VDI_MEM:
-	case CSI_VDI_PRP_VF_MEM:
 		dev_dbg(ipu->dev, "CSI_DATA_DEST_IC\n");
 		csi_dest = CSI_DATA_DEST_IC;
 		break;
@@ -967,10 +933,6 @@ void _ipu_csi_wait4eof(struct ipu_soc *ipu, ipu_channel_t channel)
 	else if (channel == CSI_PRP_ENC_MEM)
 		irq = IPU_IRQ_PRP_ENC_OUT_EOF;
 	else if (channel == CSI_PRP_VF_MEM)
-		irq = IPU_IRQ_PRP_VF_OUT_EOF;
-	else if (channel == CSI_VDI_MEM)
-		irq = IPU_IRQ_VDIC_OUT_EOF;
-	else if (channel == CSI_VDI_PRP_VF_MEM)
 		irq = IPU_IRQ_PRP_VF_OUT_EOF;
 	else{
 		dev_err(ipu->dev, "Not a CSI channel\n");
