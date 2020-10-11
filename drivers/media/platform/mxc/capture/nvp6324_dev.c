@@ -2228,19 +2228,19 @@ static int ioctl_g_ifparm(struct v4l2_int_device *s, struct v4l2_ifparm *p)
 
 	/* Initialize structure to 0s then set any non-0 values. */
 	memset(p, 0, sizeof(*p));
-#if 1
+#if 0
 	p->if_type = V4L2_IF_TYPE_BT656; /* This is the only possibility. */
 	p->u.bt656.mode = V4L2_IF_TYPE_BT656_MODE_NOBT_8BIT;
 #else
     p->if_type = V4L2_IF_TYPE_BT656_INTERLACED;
-    p->u.bt656.mode = V4L2_IF_TYPE_BT656_MODE_BT_8BIT;
+    p->u.bt656.mode = V4L2_IF_TYPE_BT656_MODE_NOBT_8BIT;
 #endif
 	p->u.bt656.clock_curr = nvp6324_data.sen.mclk;  //BT656 interlace clock mode 1 - prorgressive 0 - interlaced
 	pr_debug("   clock_curr=mclk=%d\n", nvp6324_data.sen.mclk);
 	p->u.bt656.clock_min = 27000000;
 	p->u.bt656.clock_max  = 27000000;
     //p->u.bt656.bt_sync_correct = 1;  /* Indicate external vsync */
-#if 1
+#if 0
     p->u.bt656.mode = V4L2_IF_TYPE_BT656_MODE_NOBT_8BIT;
 	//p->u.bt656.nobt_hs_inv = 0;
 	//p->u.bt656.bt_sync_correct = 0;
