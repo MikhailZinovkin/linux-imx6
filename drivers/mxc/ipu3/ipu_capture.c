@@ -881,6 +881,12 @@ int _ipu_csi_init(struct ipu_soc *ipu, ipu_channel_t channel, uint32_t csi)
 #endif
 
 #if 1
+	ipu_csi_write(ipu, csi, 0x00000000, CSI_CCIR_CODE_1); 
+	ipu_csi_write(ipu, csi, 0x00000000, CSI_CCIR_CODE_2); 
+	ipu_csi_write(ipu, csi, 0x00000000, CSI_CCIR_CODE_3);
+#endif
+
+#if 1
     dev_info(ipu->dev, "======!!===== CSI_SENS_CONF = 0x%08X\n", ipu_csi_read(ipu, csi, CSI_SENS_CONF));
     dev_info(ipu->dev, "======!!===== CSI_SENS_FRM_SIZE = 0x%08X\n", ipu_csi_read(ipu, csi, CSI_SENS_FRM_SIZE));
     dev_info(ipu->dev, "======!!===== CSI_ACT_FRM_SIZE = 0x%08X\n", ipu_csi_read(ipu, csi, CSI_ACT_FRM_SIZE));
