@@ -692,10 +692,14 @@
 
 &mipi_csi {
 	status = "okay";
-	ipu_id = <0>;
-	csi_id = <0>;
-	v_channel = <0>; //<0>;
 	lanes = <4>; //<2>;
+    
+	mipi-csi2-channel@0 {
+		ipu_id = <0>;
+		csi_id = <0>;
+		v_channel = <0>;
+		status = "okay";
+	};
 };
 
 &dcic1 {

@@ -59,9 +59,9 @@ struct mipi_csi2_info;
 /* mipi csi2 API */
 struct mipi_csi2_info *mipi_csi2_get_info(void);
 
-int mipi_csi2_get_bind_ipu(struct mipi_csi2_info *info);
-unsigned int mipi_csi2_get_bind_csi(struct mipi_csi2_info *info);
-unsigned int mipi_csi2_get_virtual_channel(struct mipi_csi2_info *info);
+int mipi_csi2_get_bind_ipu(struct mipi_csi2_info *info, unsigned int v_channel);
+unsigned int mipi_csi2_get_bind_csi(struct mipi_csi2_info *info, unsigned int v_channel);
+//unsigned int mipi_csi2_get_virtual_channel(struct mipi_csi2_info *info);
 
 bool mipi_csi2_enable(struct mipi_csi2_info *info);
 
@@ -72,9 +72,9 @@ bool mipi_csi2_get_status(struct mipi_csi2_info *info);
 unsigned int mipi_csi2_set_lanes(struct mipi_csi2_info *info, unsigned lanes);
 
 unsigned int mipi_csi2_set_datatype(struct mipi_csi2_info *info,
-					unsigned int datatype);
+					unsigned int v_channel, unsigned int datatype);
 
-unsigned int mipi_csi2_get_datatype(struct mipi_csi2_info *info);
+unsigned int mipi_csi2_get_datatype(struct mipi_csi2_info *info, unsigned int v_channel);
 
 unsigned int mipi_csi2_dphy_status(struct mipi_csi2_info *info);
 
@@ -86,7 +86,7 @@ int mipi_csi2_pixelclk_enable(struct mipi_csi2_info *info);
 
 void mipi_csi2_pixelclk_disable(struct mipi_csi2_info *info);
 
-int mipi_csi2_reset(struct mipi_csi2_info *info);
+int mipi_csi2_reset(struct mipi_csi2_info *info, int mipi_lane_bps);
 
 int mipi_csi2_reset_pal(struct mipi_csi2_info *info);
 
