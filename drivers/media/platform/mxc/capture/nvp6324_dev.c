@@ -1941,7 +1941,8 @@ int nvp6324_video_init(void)
 	dev_info(&nvp6324_data.sen.i2c_client->dev, "nvp6324_data.curr_fps = %d\n", nvp6324_data.curr_fps);
 	
 	//v1 uint8_t vifmt[4] = {0, 0, nvp6324_data.curr_mod, 0};
-	uint8_t vifmt[4] = {0, nvp6324_data.curr_mod, 0, 0};
+	//v2 uint8_t vifmt[4] = {0, nvp6324_data.curr_mod, 0, 0};
+	uint8_t vifmt[4] = {nvp6324_data.curr_mod, 0, 0, 0};
 	
 	nvp6324_data.lanes = MIPI_LANES_4;
 	nvp6324_data.pixformat = YUV422_TYPE;
@@ -2088,7 +2089,7 @@ MODULE_LICENSE("GPL");
 MODULE_VERSION("1.0");
 MODULE_ALIAS("CSI");
 
-#define W_CH  1
+#define W_CH  0
 
 //-------------------------------------------------------------------------------------------------------------------
 static int nvp6324_init_csi(void)      
