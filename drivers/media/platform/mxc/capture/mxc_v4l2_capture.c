@@ -11,7 +11,7 @@
  * http://www.gnu.org/copyleft/gpl.html
  */
 
-//#define DEBUG
+#define DEBUG
 /*!
  * @file drivers/media/video/mxc/capture/mxc_v4l2_capture.c
  *
@@ -50,7 +50,7 @@
 
 #define init_MUTEX(sem)         sema_init(sem, 1)
 
-#if 0
+#if 1
 #undef dev_dbg
 #define dev_dbg(dev, format, arg...) {dev_printk(KERN_ERR, dev, format, ##arg);}
 #undef pr_debug
