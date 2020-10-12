@@ -11,7 +11,7 @@
  * http://www.gnu.org/copyleft/gpl.html
  */
 
-#define DEBUG
+//#define DEBUG
 /*!
  * @file drivers/media/video/mxc/capture/mxc_v4l2_capture.c
  *
@@ -50,7 +50,7 @@
 
 #define init_MUTEX(sem)         sema_init(sem, 1)
 
-#if 1
+#if 0
 #undef dev_dbg
 #define dev_dbg(dev, format, arg...) {dev_printk(KERN_ERR, dev, format, ##arg);}
 #undef pr_debug
@@ -3194,6 +3194,10 @@ static int mxc_v4l2_master_attach(struct v4l2_int_device *slave)
 	}
 
 	cam->sensor = slave;
+    cam->mipi_v_channel = sdata->v_channel;
+    cam->is_mipi_cam = sdata->is_mipi;
+    cam->is_mipi_cam_interlaced = sdata->is_mipi_interlaced;
+
 
 	if (cam->sensor_index < MXC_SENSOR_NUM) {
 		cam->all_sensors[cam->sensor_index] = slave;
