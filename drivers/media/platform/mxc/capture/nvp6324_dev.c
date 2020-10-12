@@ -1945,7 +1945,7 @@ int nvp6324_video_init(void)
 	
 	nvp6324_data.lanes = MIPI_LANES_4;
 	nvp6324_data.pixformat = YUV422_TYPE;
-	nvp6324_data.pclk = PCLK_756MHZ;
+	nvp6324_data.pclk = PCLK_594MHZ; //PCLK_756MHZ;
 	nvp6324_data.arb_scale = 0;
         nvp6324_data.arb_enable = 0xFF;
     
@@ -2237,10 +2237,11 @@ static int ioctl_g_ifparm(struct v4l2_int_device *s, struct v4l2_ifparm *p)
 #endif
 	p->u.bt656.clock_curr = nvp6324_data.sen.mclk;  //BT656 interlace clock mode 1 - prorgressive 0 - interlaced
 	pr_debug("   clock_curr=mclk=%d\n", nvp6324_data.sen.mclk);
-	p->u.bt656.clock_min = 27000000;
+	//p->u.bt656.clock_min = 27000000;
 	p->u.bt656.clock_max  = 27000000;
+    p->u.bt656.bt_sync_correct = 0; // Use embedded sync
     //p->u.bt656.bt_sync_correct = 1;  /* Indicate external vsync */
-#if 1
+#if 0
     p->u.bt656.mode = V4L2_IF_TYPE_BT656_MODE_NOBT_8BIT;
 	//p->u.bt656.nobt_hs_inv = 0;
 	//p->u.bt656.bt_sync_correct = 0;

@@ -379,8 +379,11 @@ int mipi_csi2_reset_ahd(struct mipi_csi2_info *info)
 	mipi_csi2_write(info, 0x00010044, MIPI_CSI2_PHY_TST_CTRL1);
 	mipi_csi2_write(info, 0x00000000, MIPI_CSI2_PHY_TST_CTRL0);
 	//mipi_csi2_write(info, 0x00000014, MIPI_CSI2_PHY_TST_CTRL1);
-
+#if 0
 	mipi_csi2_write(info, 0x00000032, MIPI_CSI2_PHY_TST_CTRL1); //  750-800MHz
+#else
+	mipi_csi2_write(info, 0x0000002e, MIPI_CSI2_PHY_TST_CTRL1); //  550-600MHz
+#endif
 	//mipi_csi2_write(info, 0x00000026, MIPI_CSI2_PHY_TST_CTRL1);
 	mipi_csi2_write(info, 0x00000002, MIPI_CSI2_PHY_TST_CTRL0);
 	mipi_csi2_write(info, 0x00000000, MIPI_CSI2_PHY_TST_CTRL0);
