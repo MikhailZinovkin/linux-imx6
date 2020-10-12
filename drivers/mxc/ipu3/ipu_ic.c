@@ -30,7 +30,7 @@
 #include "ipu_param_mem.h"
 #include "ipu_regs.h"
 
-#if 0
+#if 1
 #undef dev_dbg
 #define dev_dbg(dev, format, arg...) {dev_printk(KERN_ERR, dev, format, ##arg);}
 #undef pr_debug
