@@ -118,7 +118,17 @@ static irqreturn_t csi_enc_callback(int irq, void *dev_id)
 {
 	cam_data *cam = (cam_data *) dev_id;
 
+#if 0
 	ipu_select_buffer(cam->ipu, CSI_MEM, IPU_OUTPUT_BUFFER, csi_buffer_num);
+#else
+    ipu_channel_t csi_channel;
+    if (cam->csi == 1)
+		csi_channel = CSI_MEM1;
+	else
+		csi_channel = CSI_MEM0;
+
+	ipu_select_buffer(cam->ipu, csi_channel, IPU_OUTPUT_BUFFER, csi_buffer_num);
+#endif
 	schedule_work(&cam->csi_work_struct);
 	csi_buffer_num = (csi_buffer_num == 0) ? 1 : 0;
 	return IRQ_HANDLED;
@@ -129,6 +139,7 @@ static int csi_enc_setup(cam_data *cam)
 	ipu_channel_params_t params;
 	u32 pixel_fmt;
 	int err = 0, sensor_protocol = 0;
+    ipu_channel_t csi_channel;
     printk(KERN_ERR "====================================!!!!!!!!===========================\n");
 
 	if (!cam) {
@@ -138,6 +149,11 @@ static int csi_enc_setup(cam_data *cam)
 
 	memset(&params, 0, sizeof(ipu_channel_params_t));
 	params.csi_mem.csi = cam->csi;
+    
+    if (cam->csi == 1)
+		csi_channel = CSI_MEM1;
+	else
+		csi_channel = CSI_MEM0;
 
 	sensor_protocol = ipu_csi_get_sensor_protocol(cam->ipu, cam->csi);
 	switch (sensor_protocol) {

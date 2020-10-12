@@ -2117,7 +2117,7 @@ static int nvp6324_init_csi(void)
 	
 	mipi_csi2_reset_ahd(mipi_csi2_info);
 
- 	mipi_csi2_set_datatype(mipi_csi2_info, MIPI_DT_YUV422);
+ 	mipi_csi2_set_datatype(mipi_csi2_info, nvp6324_data.sen.virtual_channel, MIPI_DT_YUV422);
 	
 	nvp6324_chanState(1, W_CH);
 	
@@ -2127,7 +2127,7 @@ static int nvp6324_init_csi(void)
 		/* wait for mipi sensor ready */
 		while (1) {
 			mipi_reg = mipi_csi2_dphy_status(mipi_csi2_info);
-			if (mipi_reg == 0x300){
+			if ((mipi_reg & 0x700) == 0x300){
 				break;
 			}
 			if (i++ >= 200) {

@@ -215,7 +215,8 @@ typedef struct _cam_data {
 	wait_queue_head_t power_queue;
 	unsigned int ipu_id;
 	unsigned int csi;
-	unsigned mipi_camera;
+    unsigned int mipi_v_channel;
+	unsigned mipi_camera; //==bool is_mipi_cam;
 	int csi_in_use;
 	u8 mclk_source;
 	bool mclk_on[2];	/* two mclk sources at most now */
@@ -246,7 +247,7 @@ typedef struct _cam_data {
 } cam_data;
 
 struct sensor_data {
-	const struct ov5642_platform_data *platform_data;
+	//const struct ov5642_platform_data *platform_data; // not used
 	struct v4l2_int_device *v4l2_int_device;
 	struct i2c_client *i2c_client;
 	struct v4l2_pix_format pix;
@@ -270,7 +271,7 @@ struct sensor_data {
 	int ipu_id;
 	int csi;
 	int last_reg;
-	unsigned mipi_camera;
+	unsigned mipi_camera; //==bool is_mipi;
 	unsigned virtual_channel;	/* Used with mipi */
 
 	void (*io_init)(void);
@@ -319,8 +320,8 @@ static inline int cam_mipi_csi2_enable(cam_data *cam, struct mipi_fields *mf)
 	}
 	if (mipi_csi2_get_status(mipi_csi2_info)) {
 		mf->en = true;
-		mf->vc = 0;//sensor->virtual_channel;
-		mf->id = mipi_csi2_get_datatype(mipi_csi2_info);
+		mf->vc = sensor->virtual_channel;
+		mf->id = mipi_csi2_get_datatype(mipi_csi2_info , mf->vc);
 		if (!mipi_csi2_pixelclk_enable(mipi_csi2_info))
 			cam->mipi_pixelclk_enabled = 1;
 		return 0;

@@ -2733,12 +2733,12 @@ static int ov5640_init_mode(enum ov5640_frame_rate frame_rate,
 
 	/*Only reset MIPI CSI2 HW at sensor initialize*/
 	if (mode == ov5640_mode_INIT)
-		mipi_csi2_reset(mipi_csi2_info);
+		mipi_csi2_reset(mipi_csi2_info, 800); //Total data rate / lane numbers, Pixel clock 96MHz * 16 bits per pixel = 1536 Mbps.
 
 	if (ov5640_data.pix.pixelformat == V4L2_PIX_FMT_UYVY)
-		mipi_csi2_set_datatype(mipi_csi2_info, MIPI_DT_YUV422);
+		mipi_csi2_set_datatype(mipi_csi2_info, ov5640_data.virtual_channel, MIPI_DT_YUV422);
 	else if (ov5640_data.pix.pixelformat == V4L2_PIX_FMT_RGB565)
-		mipi_csi2_set_datatype(mipi_csi2_info, MIPI_DT_RGB565);
+		mipi_csi2_set_datatype(mipi_csi2_info, ov5640_data.virtual_channel, MIPI_DT_RGB565);
 	else
 		pr_err("currently this sensor format can not be supported!\n");
 

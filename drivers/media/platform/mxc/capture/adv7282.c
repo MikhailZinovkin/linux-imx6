@@ -956,7 +956,7 @@ static void adv7282_initDev(uint8_t flag)
 	if(flag == INIT_FLAG )
 		mipi_csi2_reset_pal(mipi_csi2_info);
 
- 	mipi_csi2_set_datatype(mipi_csi2_info, MIPI_DT_YUV422);
+ 	mipi_csi2_set_datatype(mipi_csi2_info, adv7282_data.sen.virtual_channel, MIPI_DT_YUV422);
 
 	adv7282_csiTxState(1);
 
