@@ -8,7 +8,6 @@
  * it under the terms of the GNU General Public License version 2 as
  * published by the Free Software Foundation.
  */
-#define DEBUG
 
 
 #include <linux/dma-mapping.h>
@@ -28,6 +27,15 @@
 
 #include "../dmaengine.h"
 #include "ipu_intern.h"
+
+#define DEBUG
+
+#if 1
+#undef dev_dbg
+#define dev_dbg(dev, format, arg...) {dev_printk(KERN_ERR, dev, format, ##arg);}
+#undef pr_debug
+#define pr_debug(fmt, ...) printk(KERN_ERR pr_fmt(fmt), ##__VA_ARGS__)
+#endif
 
 #define FS_VF_IN_VALID	0x00000002
 #define FS_ENC_IN_VALID	0x00000001
