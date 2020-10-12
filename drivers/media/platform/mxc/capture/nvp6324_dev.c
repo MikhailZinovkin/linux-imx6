@@ -2239,8 +2239,8 @@ static int ioctl_g_ifparm(struct v4l2_int_device *s, struct v4l2_ifparm *p)
 	pr_debug("   clock_curr=mclk=%d\n", nvp6324_data.sen.mclk);
 	//p->u.bt656.clock_min = 27000000;
 	p->u.bt656.clock_max  = 27000000;
-    p->u.bt656.bt_sync_correct = 0; // Use embedded sync
-    //p->u.bt656.bt_sync_correct = 1;  /* Indicate external vsync */
+    //p->u.bt656.bt_sync_correct = 0; // Use embedded sync
+    p->u.bt656.bt_sync_correct = 1;  /* Indicate external vsync */
 #if 0
     p->u.bt656.mode = V4L2_IF_TYPE_BT656_MODE_NOBT_8BIT;
 	//p->u.bt656.nobt_hs_inv = 0;
