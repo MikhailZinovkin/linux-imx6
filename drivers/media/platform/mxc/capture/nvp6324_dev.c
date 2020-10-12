@@ -2115,7 +2115,7 @@ static int nvp6324_init_csi(void)
   
 	mipi_csi2_set_lanes(mipi_csi2_info, 4);  /////     //set lanes in dts
 	
-	mipi_csi2_reset_ahd(mipi_csi2_info);
+	mipi_csi2_reset(mipi_csi2_info, 594);
 
  	mipi_csi2_set_datatype(mipi_csi2_info, nvp6324_data.sen.virtual_channel, MIPI_DT_YUV422);
 	
