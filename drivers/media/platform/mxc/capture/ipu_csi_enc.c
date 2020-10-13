@@ -33,14 +33,6 @@
 	#define CAMERA_TRACE(x)
 #endif
 
-static inline ipu_channel_t _get_ipu_channel(int csi_id)
-{
-    return (csi_id == 0)?CSI_MEM0:CSI_MEM1;
-}
-static inline int _get_ipu_irq(int csi_id)
-{
-    return (csi_id == 0)?IPU_IRQ_CSI0_OUT_EOF:IPU_IRQ_CSI1_OUT_EOF;
-}
 /*
  * Function definitions
  */
@@ -83,12 +75,11 @@ static int csi_enc_setup(cam_data *cam)
 		printk(KERN_ERR "cam private is NULL\n");
 		return -ENXIO;
 	}
+
 	memset(&params, 0, sizeof(ipu_channel_params_t));
 	params.csi_mem.csi = cam->csi;
-#if 1
+
 	sensor_protocol = ipu_csi_get_sensor_protocol(cam->ipu, cam->csi);
-    printk(KERN_INFO "======================= sensor_protocol= %u\n", sensor_protocol);
-    
 	switch (sensor_protocol) {
 	case IPU_CSI_CLK_MODE_GATED_CLK:
 	case IPU_CSI_CLK_MODE_NONGATED_CLK:
@@ -106,37 +97,6 @@ static int csi_enc_setup(cam_data *cam)
 		printk(KERN_ERR "sensor protocol unsupported\n");
 		return -EINVAL;
 	}
-#else
-    int interlacedGated = ipu_csi_get_interlaced_mode();
-
-    sensor_protocol = ipu_csi_get_sensor_protocol(cam->ipu, cam->csi);
-
-    if(interlacedGated) {
-      pr_info("_____params.csi_mem.interlaced gated mode on - set interlaced to true_____\r\n");
-      params.csi_mem.interlaced = true;
-    }
-    else{
-      switch (sensor_protocol) {
-        case IPU_CSI_CLK_MODE_GATED_CLK:
-        case IPU_CSI_CLK_MODE_NONGATED_CLK:
-        case IPU_CSI_CLK_MODE_CCIR656_PROGRESSIVE:
-        case IPU_CSI_CLK_MODE_CCIR1120_PROGRESSIVE_DDR:
-        case IPU_CSI_CLK_MODE_CCIR1120_PROGRESSIVE_SDR:
-          pr_info("_____params.csi_mem.interlaced false_____\r\n");
-          params.csi_mem.interlaced = false;
-          break;
-        case IPU_CSI_CLK_MODE_CCIR656_INTERLACED:
-        case IPU_CSI_CLK_MODE_CCIR1120_INTERLACED_DDR:
-        case IPU_CSI_CLK_MODE_CCIR1120_INTERLACED_SDR:
-          pr_info("_____params.csi_mem.interlaced true_____\r\n");
-          params.csi_mem.interlaced = true;
-          break;
-        default:
-          printk(KERN_ERR "sensor protocol unsupported\n");
-          return -EINVAL;
-      }
-    }
-#endif
 
 	if (cam->v2f.fmt.pix.pixelformat == V4L2_PIX_FMT_YUV420)
 		pixel_fmt = IPU_PIX_FMT_YUV420P;
@@ -167,14 +127,14 @@ static int csi_enc_setup(cam_data *cam)
 	err = cam_mipi_csi2_enable(cam, &params.csi_mem.mipi);
 	if (err)
 		return err;
-	
-	err = ipu_channel_request(cam->ipu, _get_ipu_channel(cam->csi), &params, &cam->ipu_chan);
+
+	err = ipu_channel_request(cam->ipu, CSI_MEM, &params, &cam->ipu_chan);
 	if (err) {
 		pr_err("%s:ipu_channel_request %d\n", __func__, err);
 		return err;
 	}
 
-	err = ipu_init_channel_buffer(cam->ipu, _get_ipu_channel(cam->csi), IPU_OUTPUT_BUFFER,
+	err = ipu_init_channel_buffer(cam->ipu, CSI_MEM, IPU_OUTPUT_BUFFER,
 				      pixel_fmt, cam->v2f.fmt.pix.width,
 				      cam->v2f.fmt.pix.height,
 				      cam->v2f.fmt.pix.bytesperline,
@@ -186,7 +146,7 @@ static int csi_enc_setup(cam_data *cam)
 		printk(KERN_ERR "CSI_MEM output buffer\n");
 		return err;
 	}
-	err = ipu_enable_channel(cam->ipu, _get_ipu_channel(cam->csi));
+	err = ipu_enable_channel(cam->ipu, CSI_MEM);
 	if (err < 0) {
 		printk(KERN_ERR "ipu_enable_channel CSI_MEM\n");
 		return err;
@@ -203,19 +163,19 @@ static int csi_enc_setup(cam_data *cam)
  *
  * @return  status
  */
-static int csi_enc_eba_update1(struct ipu_soc *ipu, dma_addr_t eba,
+static int csi_enc_eba_update(struct ipu_soc *ipu, dma_addr_t eba,
 			      int *buffer_num)
 {
 	int err = 0;
 
 	pr_debug("eba %x\n", eba);
-	err = ipu_update_channel_buffer(ipu, CSI_MEM1, IPU_OUTPUT_BUFFER,
+	err = ipu_update_channel_buffer(ipu, CSI_MEM, IPU_OUTPUT_BUFFER,
 					*buffer_num, eba);
 	if (err != 0) {
-		ipu_clear_buffer_ready(ipu, CSI_MEM1, IPU_OUTPUT_BUFFER,
+		ipu_clear_buffer_ready(ipu, CSI_MEM, IPU_OUTPUT_BUFFER,
 				       *buffer_num);
 
-		err = ipu_update_channel_buffer(ipu, CSI_MEM1, IPU_OUTPUT_BUFFER,
+		err = ipu_update_channel_buffer(ipu, CSI_MEM, IPU_OUTPUT_BUFFER,
 						*buffer_num, eba);
 		if (err != 0) {
 			pr_err("ERROR: v4l2 capture: fail to update "
@@ -224,39 +184,13 @@ static int csi_enc_eba_update1(struct ipu_soc *ipu, dma_addr_t eba,
 		}
 	}
 
-	ipu_select_buffer(ipu, CSI_MEM1, IPU_OUTPUT_BUFFER, *buffer_num);
+	ipu_select_buffer(ipu, CSI_MEM, IPU_OUTPUT_BUFFER, *buffer_num);
 
 	*buffer_num = (*buffer_num == 0) ? 1 : 0;
 
 	return 0;
 }
 
-static int csi_enc_eba_update0(struct ipu_soc *ipu, dma_addr_t eba, int *buffer_num)
-{
-	int err = 0;
-
-	pr_debug("eba %x\n", eba);
-	err = ipu_update_channel_buffer(ipu, CSI_MEM0, IPU_OUTPUT_BUFFER,
-					*buffer_num, eba);
-	if (err != 0) {
-		ipu_clear_buffer_ready(ipu, CSI_MEM0, IPU_OUTPUT_BUFFER,
-				       *buffer_num);
-
-		err = ipu_update_channel_buffer(ipu, CSI_MEM0, IPU_OUTPUT_BUFFER,
-						*buffer_num, eba);
-		if (err != 0) {
-			pr_err("ERROR: v4l2 capture: fail to update "
-			       "buf%d\n", *buffer_num);
-			return err;
-		}
-	}
-
-	ipu_select_buffer(ipu, CSI_MEM0, IPU_OUTPUT_BUFFER, *buffer_num);
-
-	*buffer_num = (*buffer_num == 0) ? 1 : 0;
-
-	return 0;
-}
 /*!
  * Enable encoder task
  * @param private       struct cam_data * mxc capture instance
@@ -294,8 +228,8 @@ static int csi_enc_enabling_tasks(void *private)
 	cam->dummy_frame.buffer.type = V4L2_BUF_TYPE_PRIVATE;
 	cam->dummy_frame.buffer.m.offset = cam->dummy_frame.paddress;
 
-	ipu_clear_irq(cam->ipu, _get_ipu_irq(cam->csi));
-	err = ipu_request_irq(cam->ipu, _get_ipu_irq(cam->csi),
+	ipu_clear_irq(cam->ipu, IPU_IRQ_CSI0_OUT_EOF);
+	err = ipu_request_irq(cam->ipu, IPU_IRQ_CSI0_OUT_EOF,
 			      csi_enc_callback, 0, "Mxc Camera", cam);
 	if (err != 0) {
 		pr_err("%s: Error requesting IPU_IRQ_CSI0_OUT_EOF\n", __func__);
@@ -355,7 +289,7 @@ static int csi_enc_disable_csi(void *private)
 	/* free csi eof irq firstly.
 	 * when disable csi, wait for idmac eof.
 	 * it requests eof irq again */
-	ipu_free_irq(cam->ipu, _get_ipu_irq(cam->csi), cam);
+	ipu_free_irq(cam->ipu, IPU_IRQ_CSI0_OUT_EOF, cam);
 	return cam_ipu_disable_csi(cam);
 }
 
@@ -372,9 +306,7 @@ int csi_enc_select(void *private)
 	int err = 0;
 
 	if (cam) {
-		//cam->enc_update_eba = csi_enc_eba_update;
-		if (cam->csi == 0) cam->enc_update_eba = csi_enc_eba_update0;
-		if (cam->csi == 1) cam->enc_update_eba = csi_enc_eba_update1;
+		cam->enc_update_eba = csi_enc_eba_update;
 		cam->enc_enable = csi_enc_enabling_tasks;
 		cam->enc_disable = csi_enc_disabling_tasks;
 		cam->enc_enable_csi = csi_enc_enable_csi;
