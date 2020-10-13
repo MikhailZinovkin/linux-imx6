@@ -880,7 +880,7 @@ int _ipu_csi_init(struct ipu_soc *ipu, ipu_channel_t channel, uint32_t csi)
 	ipu_csi_write(ipu, csi, 0x00FF0000, CSI_CCIR_CODE_3);
 #endif
 
-#if 1
+#if 0
 	ipu_csi_write(ipu, csi, 0x00000000, CSI_CCIR_CODE_1); 
 	ipu_csi_write(ipu, csi, 0x00000000, CSI_CCIR_CODE_2); 
 	ipu_csi_write(ipu, csi, 0x00000000, CSI_CCIR_CODE_3);

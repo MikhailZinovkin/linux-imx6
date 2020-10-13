@@ -44,10 +44,21 @@
 #define YUV420_LEGACY_TYPE 2
 
 #define SENSOR_NUM 1 //4
+
+#define __IS_FRAME_MODE_TVIN 0 //у нас field mode
+
+
+// isl79985->  CHIP_ID_79985 -> field mode (have short packets) -> IDMAC in progressive mode
+// isl79987->  CHIP_ID_79987 -> frame mode (no short packets)   -> IDMAC in interlaced mode
+
 unsigned int g_isl79985_width = 720;
-unsigned int g_isl79985_height = 576; //240; //480; //240;
-//unsigned int g_isl7998x_field_height = 240;
-//unsigned int g_isl7998x_frame_height = 480;
+#if __IS_FRAME_MODE_TVIN
+  unsigned int g_isl79985_height = 576; //240; //480; //240;
+#else
+  unsigned int g_isl79985_height = 576/2; //240; //480; //240;
+#endif
+//unsigned int g_isl7998x_field_height = 240; // это для isl79985 (с короткими пакетами)
+//unsigned int g_isl7998x_frame_height = 480; // это для isl79987 (без коротких пакетов?) (+ interlaced =1)
 
 /*!
  * Maintains the information on the current state of the sesor.
@@ -1920,7 +1931,14 @@ int nvp6324_video_init(void)
 #else
           nvp6324_data.sen.pix.width = g_isl79985_width;
 	      nvp6324_data.sen.pix.height = g_isl79985_height;
+          nvp6324_data.sen.spix.swidth = g_isl79985_width; //720;
+          nvp6324_data.sen.spix.sheight = g_isl79985_height; //576; //625
+          nvp6324_data.sen.spix.top = 0;		
+	      nvp6324_data.sen.spix.left = 0;
+          nvp6324_data.sen.pix.priv = 1;
+#if __IS_FRAME_MODE_TVIN
           nvp6324_data.sen.is_mipi_interlaced = 1;
+#endif     
           nvp6324_data.sen.streamcap.capturemode = 0;
           nvp6324_data.sen.streamcap.timeperframe.denominator = 25;
           nvp6324_data.sen.streamcap.timeperframe.numerator = 1;
@@ -2378,9 +2396,34 @@ static int ioctl_g_fmt_cap(struct v4l2_int_device *s, struct v4l2_format *f)
 static int ioctl_g_fmt_cap(struct v4l2_int_device *s, struct v4l2_format *f)
 {
 	struct sensor_data *sensor = &((struct sensor *) s->priv )->sen;
-
+#if 0
 	f->fmt.pix = sensor->pix;
+    f->fmt.pix.priv = 1;
+#else
+    switch (f->type) {
+	case V4L2_BUF_TYPE_VIDEO_CAPTURE:
+		dev_info(&nvp6324_data.sen.i2c_client->dev, "nvp6324 V4L2_BUF_TYPE_VIDEO_CAPTURE\n");	
+		dev_info(&nvp6324_data.sen.i2c_client->dev, " Returning pix of %dx%d\n",sensor->pix.width, sensor->pix.height);		
+		f->fmt.pix = sensor->pix;
+		f->fmt.pix.priv = 1;
+		break;
+	
+	case V4L2_BUF_TYPE_SENSOR:
+		dev_info(&nvp6324_data.sen.i2c_client->dev, "nvp6324 V4L2_BUF_TYPE_SENSOR\n");	
+		dev_info(&nvp6324_data.sen.i2c_client->dev, " Returning spix of %dx%d\n",sensor->spix.swidth, sensor->spix.sheight);	
+		f->fmt.spix = sensor->spix;
+		break;
+	case V4L2_BUF_TYPE_PRIVATE:
+		dev_info(&nvp6324_data.sen.i2c_client->dev, "nvp6324 V4L2_BUF_TYPE_PRIVATE\n");	
+		v4l2_std_id std = V4L2_STD_PAL;	
+		f->fmt.pix.pixelformat = (u32)V4L2_STD_PAL;
+		break;
 
+	default:
+		f->fmt.pix = sensor->pix;
+		break;
+	}
+#endif
 	return 0;
 }
 
