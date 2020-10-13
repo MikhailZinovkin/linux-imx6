@@ -43,6 +43,29 @@
 #define YUV420_TYPE 1
 #define YUV420_LEGACY_TYPE 2
 
+#define SENSOR_NUM 1 //4
+unsigned int g_isl79985_width = 720;
+unsigned int g_isl79985_height = 240;
+
+/*!
+ * Maintains the information on the current state of the sesor.
+ */
+//static struct sensor_data isl79985_data[SENSOR_NUM];
+
+static int nvp6324_probe(struct i2c_client *adapter,
+				const struct i2c_device_id *device_id);
+static int nvp6324_remove(struct i2c_client *client);
+
+static int ioctl_dev_init(struct v4l2_int_device *s);
+
+#if 0
+static const struct i2c_device_id isl79985_id[] = {
+	{"isl79985_mipi", 0},
+	{},
+};
+#endif
+
+#if 0
 static int ioctl_g_ifparm(struct v4l2_int_device *s, struct v4l2_ifparm *p);
 static int ioctl_s_power(struct v4l2_int_device *s, int on);
 static int ioctl_g_parm(struct v4l2_int_device *s, struct v4l2_streamparm *a);
@@ -98,6 +121,7 @@ static struct v4l2_int_device nvp6324_int_device = {
 		.slave = &nvp6324_slave,
 	},
 };
+#endif
 
 
 struct sensor {
@@ -1878,8 +1902,11 @@ int nvp6324_video_init(void)
 	
 	switch(nvp6324_data.curr_mod)
 	{
-	    case FMT_CVBS_H720_PAL:		  
-	      nvp6324_data.sen.pix.width = 720; //  /2;
+	    case FMT_CVBS_H720_PAL:
+
+
+#if 0
+          nvp6324_data.sen.pix.width = 720; //  /2;
 	      nvp6324_data.sen.pix.height = 576;
 	      nvp6324_data.sen.spix.swidth = 720; // 864/2; //720; ///2;
 	      nvp6324_data.sen.spix.sheight =  625; //576; //625/2;
@@ -1888,6 +1915,13 @@ int nvp6324_video_init(void)
 	      nvp6324_data.sen.spix.top = 0;		
 	      nvp6324_data.sen.spix.left = 0;
 		  nvp6324_data.sen.pix.priv = 1;
+#else
+          nvp6324_data.sen.pix.width = g_isl79985_width;
+	      nvp6324_data.sen.pix.height = g_isl79985_height;
+          nvp6324_data.sen.streamcap.capturemode = 0;
+          nvp6324_data.sen.streamcap.timeperframe.denominator = 25;
+          nvp6324_data.sen.streamcap.timeperframe.numerator = 1;
+#endif
 	      ipu_csi_set_interlaced_mode(1);
 	      dev_info(&nvp6324_data.sen.i2c_client->dev, "nvp6324 video mode = FMT_CVBS_H720_PAL\n");
 	      break;
@@ -1948,115 +1982,13 @@ int nvp6324_video_init(void)
 	nvp6324_data.pixformat = YUV422_TYPE;
 	nvp6324_data.pclk = PCLK_594MHZ; //PCLK_756MHZ;
 	nvp6324_data.arb_scale = 0;
-        nvp6324_data.arb_enable = 0xFF;
+    nvp6324_data.arb_enable = 0xFF;
     
 	nvp6324_chip_initialize(vifmt, nvp6324_data.lanes, nvp6324_data.pclk, nvp6324_data.pixformat);
 	
 	dev_info(&nvp6324_data.sen.i2c_client->dev, "nvp6324 video init done\n");
 
 	return ret;
-}
-
-static int nvp6324_probe(struct i2c_client *client,
-			 const struct i2c_device_id *id)
-{
-	struct device *dev = &client->dev;
-	
-	int ret;
-	
-	dev_info(dev, "Start nvp6324 probe...\n");
-	
-	memset(&nvp6324_data, 0, sizeof(nvp6324_data));
-	nvp6324_data.sen.i2c_client = client;
-	nvp6324_data.sen.on = true;
-	nvp6324_data.sen.csi = 0;
-	nvp6324_data.sen.mipi_camera = 1;
-	
-
-	nvp6324_data.sen.sensor_clk = devm_clk_get(dev, "csi_mclk");
-	if (IS_ERR(nvp6324_data.sen.sensor_clk)) {
-		nvp6324_data.sen.sensor_clk = NULL;
-		dev_err(dev, "clock-frequency missing or invalid\n");
-		return PTR_ERR(nvp6324_data.sen.sensor_clk);
-	}
-
-	ret = of_property_read_u32(dev->of_node, "mclk",
-				   &(nvp6324_data.sen.mclk));
-	if (ret) {
-		dev_err(dev, "mclk missing or invalid\n");
-		return ret;
-	}
-    dev_info(&nvp6324_data.sen.i2c_client->dev, "nvp6324_data.sen.mclk=%d from devicetree.\n", nvp6324_data.sen.mclk);
-
-	ret = of_property_read_u32(dev->of_node, "mclk_source",
-				   (u32*)&(nvp6324_data.sen.mclk_source));
-	if (ret) {
-		dev_err(dev, "mclk_source missing or invalid\n");
-		return ret;
-	}
-	
-	pr_info("Nvp6324 check ipu\n");
-    	ret = of_property_read_u32(dev->of_node, "ipu_id", &nvp6324_data.sen.ipu_id);
-	if (ret) {
-		dev_err(dev, "ipu_id missing or invalid\n");
-		return ret;
-	}
-    	else dev_info(&nvp6324_data.sen.i2c_client->dev, "Read ipu_id=%d from devicetree.\n", nvp6324_data.sen.ipu_id);
-
-	pr_info("Nvp6324 check csi\n");
-    	ret = of_property_read_u32(dev->of_node, "csi_id", &nvp6324_data.sen.csi);
-	if (ret) {
-		dev_err(dev, "csi id missing or invalid\n");
-		return ret;
-	}
-    	else dev_info(&nvp6324_data.sen.i2c_client->dev, "Read csi_id=%d from devicetree.\n", nvp6324_data.sen.csi);
-
-	clk_prepare_enable(nvp6324_data.sen.sensor_clk);
-	
-	nvp6324_write_reg(0xFF, 0x00);
-	
-	int rev = nvp6324_read_reg(0xf4);
-	
-	if(rev != 0xB0){
-	  dev_info(dev, "nvp6324 not found! error!", client->addr);
-	  return -1;
-	}
-	
-	dev_info(dev, "nvp6324 found, address: 0x%02x, chip id: 0xb0", client->addr);	
-	
-	nvp6324_int_device.priv = &nvp6324_data;
-	
-	nvp6324_video_init();
-	
-	ret = v4l2_int_device_register(&nvp6324_int_device);
-	pr_debug("   v4l2 device created, status is %d\n", ret);
-	
-	pr_debug("%s: init done, ret=%d\n", __func__,ret);
-
-	return 0;
-}
-
-static int nvp6324_remove(struct i2c_client *client)
-{	
-	void *mipi_csi2_info;
-
-	dev_dbg(&nvp6324_data.sen.i2c_client->dev,
-		"%s:Removing %s video decoder @ 0x%02X from adapter %s\n",
-		__func__, "nvp6324", client->addr << 1, client->adapter->name);
-	
-	v4l2_int_device_unregister(&nvp6324_int_device);
-	
- 	/* disable mipi csi2 */
-    	mipi_csi2_info = mipi_csi2_get_info();
-    	if (mipi_csi2_info)
-        if (mipi_csi2_get_status(mipi_csi2_info)){
-            mipi_csi2_disable(mipi_csi2_info);
-	    pr_info("mipi csi2 disabled\n");	
-	}	
-
-	
-
-	return 0;
 }
 
 static const struct i2c_device_id nvp6324_id[] = {
@@ -2095,7 +2027,8 @@ MODULE_ALIAS("CSI");
 static int nvp6324_init_csi(void)      
 {
 	void *mipi_csi2_info;
-	u32 mipi_reg;     
+	u32 mipi_reg;
+    struct sensor_data *sensor = &nvp6324_data.sen;
 		
 	nvp6324_chanState(0, W_CH);
 	
@@ -2110,14 +2043,22 @@ static int nvp6324_init_csi(void)
 
 	if (!mipi_csi2_get_status(mipi_csi2_info)) {
 		pr_err("Can not enable mipi csi2 driver!\n");
-		return;
+		return -1;
 	}
   
 	mipi_csi2_set_lanes(mipi_csi2_info, 4);  /////     //set lanes in dts
 	
 	mipi_csi2_reset(mipi_csi2_info, 594);
 
+    if (sensor->pix.pixelformat == V4L2_PIX_FMT_UYVY) {
+#if 0
+		for (int i=0; i<SENSOR_NUM; i++)
+			mipi_csi2_set_datatype(mipi_csi2_info, i, MIPI_DT_YUV422);
+#else
  	mipi_csi2_set_datatype(mipi_csi2_info, nvp6324_data.sen.virtual_channel, MIPI_DT_YUV422);
+#endif
+	} else
+		pr_err("currently this sensor format can not be supported!\n");
 	
 	nvp6324_chanState(1, W_CH);
 	
@@ -2220,6 +2161,7 @@ static int nvp6324_init_csi(void)
  * Called on open.
  */
 
+#if 0
 static int ioctl_g_ifparm(struct v4l2_int_device *s, struct v4l2_ifparm *p)
 {
 	if (s == NULL) {
@@ -2252,6 +2194,26 @@ static int ioctl_g_ifparm(struct v4l2_int_device *s, struct v4l2_ifparm *p)
 
 	return 0;
 }
+#else
+static int ioctl_g_ifparm(struct v4l2_int_device *s, struct v4l2_ifparm *p)
+{
+	struct sensor *sensor = s->priv;
+
+	if (s == NULL) {
+		pr_err("   ERROR!! no slave device set!\n");
+		return -1;
+	}
+
+	memset(p, 0, sizeof(*p));
+	p->u.bt656.clock_curr = sensor->sen.mclk;
+	pr_debug("   clock_curr=mclk=%d\n", sensor->sen.mclk);
+	p->if_type = V4L2_IF_TYPE_BT656;
+	p->u.bt656.mode = V4L2_IF_TYPE_BT656_MODE_NOBT_8BIT;
+	p->u.bt656.bt_sync_correct = 1;  /* Indicate external vsync */
+
+	return 0;
+}
+#endif
 
 /*!
  * Sets the camera power.
@@ -2292,6 +2254,7 @@ static int ioctl_g_parm(struct v4l2_int_device *s, struct v4l2_streamparm *a)
 {
 	struct sensor *sensor = s->priv;
 	struct v4l2_captureparm *cparm = &a->parm.capture;
+    int ret = 0;
 
 	dev_info(&nvp6324_data.sen.i2c_client->dev, "nvp6324 ioctl_g_parm\n");
 
@@ -2305,7 +2268,8 @@ static int ioctl_g_parm(struct v4l2_int_device *s, struct v4l2_streamparm *a)
 		cparm->timeperframe = sensor->sen.streamcap.timeperframe;
 		cparm->capturemode = sensor->sen.streamcap.capturemode;
 		dev_info(&nvp6324_data.sen.i2c_client->dev, "nvp6324 cparm->capability = %d cparm->timeperframe.denominator = %d cparm->timeperframe.numerator = %d cparm->capturemode = %d\n",
-					cparm->capability , cparm->timeperframe.denominator, cparm->timeperframe.numerator , cparm->capturemode);	
+					cparm->capability , cparm->timeperframe.denominator, cparm->timeperframe.numerator , cparm->capturemode);
+        ret = 0;
 		break;
 
 	case V4L2_BUF_TYPE_VIDEO_OUTPUT:
@@ -2314,14 +2278,16 @@ static int ioctl_g_parm(struct v4l2_int_device *s, struct v4l2_streamparm *a)
 	case V4L2_BUF_TYPE_VBI_OUTPUT:
 	case V4L2_BUF_TYPE_SLICED_VBI_CAPTURE:
 	case V4L2_BUF_TYPE_SLICED_VBI_OUTPUT:
+        ret = -EINVAL;
 		break;
 
 	default:
 		pr_debug("ioctl_g_parm:type is unknown %d\n", a->type);
+        ret = -EINVAL;
 		break;
 	}
 
-	return 0;
+	return ret;
 }
 
 /*!
@@ -2338,6 +2304,7 @@ static int ioctl_g_parm(struct v4l2_int_device *s, struct v4l2_streamparm *a)
 
 static int ioctl_s_parm(struct v4l2_int_device *s, struct v4l2_streamparm *a)
 {
+    int ret = 0;
 	dev_info(&nvp6324_data.sen.i2c_client->dev, "nvp6324 ioctl_s_parm\n");	
 	
 
@@ -2351,14 +2318,16 @@ static int ioctl_s_parm(struct v4l2_int_device *s, struct v4l2_streamparm *a)
 	case V4L2_BUF_TYPE_VBI_OUTPUT:
 	case V4L2_BUF_TYPE_SLICED_VBI_CAPTURE:
 	case V4L2_BUF_TYPE_SLICED_VBI_OUTPUT:
+        ret = -EINVAL;
 		break;
 
 	default:
 		pr_debug("   type is unknown - %d\n", a->type);
+        ret = -EINVAL;
 		break;
 	}
 
-	return 0;
+	return ret;
 }
 
 /*!
@@ -2369,7 +2338,7 @@ static int ioctl_s_parm(struct v4l2_int_device *s, struct v4l2_streamparm *a)
  * Returns the sensor's current pixel format in the v4l2_format
  * parameter.
  */
-
+#if 0
 static int ioctl_g_fmt_cap(struct v4l2_int_device *s, struct v4l2_format *f)
 {
 	struct sensor *sensor = s->priv;
@@ -2402,6 +2371,31 @@ static int ioctl_g_fmt_cap(struct v4l2_int_device *s, struct v4l2_format *f)
 
 	return 0;
 }
+#else
+static int ioctl_g_fmt_cap(struct v4l2_int_device *s, struct v4l2_format *f)
+{
+	struct sensor_data *sensor = &((struct sensor *) s->priv )->sen;
+
+	f->fmt.pix = sensor->pix;
+
+	return 0;
+}
+
+static int ioctl_try_fmt_cap(struct v4l2_int_device *s, struct v4l2_format *f)
+{
+	struct sensor_data *sensor = &((struct sensor *) s->priv )->sen;
+
+	if (sensor->i2c_client != NULL) {
+		g_isl79985_width =  f->fmt.pix.width;
+		g_isl79985_height =  f->fmt.pix.height;
+	}
+	sensor->pix.width = g_isl79985_width;
+	sensor->pix.height = g_isl79985_height;
+
+	ioctl_dev_init(s);
+	return 0;
+}
+#endif
 
 /*!
  * ioctl_g_ctrl - V4L2 sensor interface handler for VIDIOC_G_CTRL ioctl
@@ -2548,7 +2542,7 @@ static int ioctl_s_ctrl(struct v4l2_int_device *s, struct v4l2_control *vc)
  *
  * Return 0 if successful, otherwise -EINVAL.
  */
-
+#if 0
 static int ioctl_enum_framesizes(struct v4l2_int_device *s,
 				 struct v4l2_frmsizeenum *fsize)
 {	
@@ -2561,6 +2555,21 @@ static int ioctl_enum_framesizes(struct v4l2_int_device *s,
 	
 	return 0;
 }
+#else
+static int ioctl_enum_framesizes(struct v4l2_int_device *s,
+				 struct v4l2_frmsizeenum *fsize)
+{
+	struct sensor_data *sensor = &((struct sensor *) s->priv )->sen;
+
+	if (fsize->index > 1)
+		return -EINVAL;
+
+	fsize->pixel_format = sensor->pix.pixelformat;
+	fsize->discrete.width = sensor->pix.width;
+	fsize->discrete.height = sensor->pix.height;
+	return 0;
+}
+#endif
 
 /*!
  * ioctl_enum_frameintervals - V4L2 sensor interface handler for
@@ -2570,7 +2579,7 @@ static int ioctl_enum_framesizes(struct v4l2_int_device *s,
  *
  * Return 0 if successful, otherwise -EINVAL.
  */
-
+#if 0
 static int ioctl_enum_frameintervals(struct v4l2_int_device *s,
 					 struct v4l2_frmivalenum *fival)
 {
@@ -2584,6 +2593,7 @@ static int ioctl_enum_frameintervals(struct v4l2_int_device *s,
       
 	return 0;
 }
+#endif
 
 /*!
  * ioctl_g_chip_ident - V4L2 sensor interface handler for
@@ -2620,6 +2630,22 @@ static int ioctl_init(struct v4l2_int_device *s)
 	return 0;
 }
 
+/*!
+ * ioctl_enum_fmt_cap - V4L2 sensor interface handler for VIDIOC_ENUM_FMT
+ * @s: pointer to standard V4L2 device structure
+ * @fmt: pointer to standard V4L2 fmt description structure
+ *
+ * Return 0.
+ */
+static int ioctl_enum_fmt_cap(struct v4l2_int_device *s,
+			      struct v4l2_fmtdesc *fmt)
+{
+	struct sensor_data *sensor = s->priv;
+
+	fmt->pixelformat = sensor->pix.pixelformat;
+
+	return 0;
+}
 
 /*!
  * ioctl_dev_init - V4L2 sensor interface handler for vidioc_int_dev_init_num
@@ -2653,4 +2679,152 @@ static int ioctl_dev_exit(struct v4l2_int_device *s)
 
 ///////////////////////////////////////////V4L//////////////////////////////////////////
 
+
+/*!
+ * This structure defines all the ioctls for this module and links them to the
+ * enumeration.
+ */
+static struct v4l2_int_ioctl_desc nvp6324_ioctl_desc[] = {
+	{vidioc_int_dev_init_num, (v4l2_int_ioctl_func *) ioctl_dev_init},
+	{vidioc_int_dev_exit_num, ioctl_dev_exit},
+	{vidioc_int_s_power_num, (v4l2_int_ioctl_func *) ioctl_s_power},
+	{vidioc_int_g_ifparm_num, (v4l2_int_ioctl_func *) ioctl_g_ifparm},
+/*	{vidioc_int_g_needs_reset_num,
+				(v4l2_int_ioctl_func *)ioctl_g_needs_reset}, */
+/*	{vidioc_int_reset_num, (v4l2_int_ioctl_func *)ioctl_reset}, */
+	{vidioc_int_init_num, (v4l2_int_ioctl_func *) ioctl_init},
+	{vidioc_int_enum_fmt_cap_num,
+				(v4l2_int_ioctl_func *) ioctl_enum_fmt_cap},
+	{vidioc_int_try_fmt_cap_num,
+				(v4l2_int_ioctl_func *)ioctl_try_fmt_cap},
+	{vidioc_int_g_fmt_cap_num, (v4l2_int_ioctl_func *) ioctl_g_fmt_cap},
+/*	{vidioc_int_s_fmt_cap_num, (v4l2_int_ioctl_func *) ioctl_s_fmt_cap}, */
+	{vidioc_int_g_parm_num, (v4l2_int_ioctl_func *) ioctl_g_parm},
+	{vidioc_int_s_parm_num, (v4l2_int_ioctl_func *) ioctl_s_parm},
+/*	{vidioc_int_queryctrl_num, (v4l2_int_ioctl_func *)ioctl_queryctrl}, */
+	{vidioc_int_g_ctrl_num, (v4l2_int_ioctl_func *) ioctl_g_ctrl},
+	{vidioc_int_s_ctrl_num, (v4l2_int_ioctl_func *) ioctl_s_ctrl},
+	{vidioc_int_enum_framesizes_num,
+				(v4l2_int_ioctl_func *) ioctl_enum_framesizes},
+	{vidioc_int_g_chip_ident_num,
+				(v4l2_int_ioctl_func *) ioctl_g_chip_ident},
+};
+
+static struct v4l2_int_slave nvp6324_slave = {
+	.ioctls = nvp6324_ioctl_desc,
+	.num_ioctls = ARRAY_SIZE(nvp6324_ioctl_desc),
+};
+
+static struct v4l2_int_device nvp6324_int_device = {
+	.module = THIS_MODULE,
+	.name = "nvp6324",
+	.type = v4l2_int_type_slave,
+	.u = {
+		.slave = &nvp6324_slave,
+	},
+};
+
+
+static int nvp6324_probe(struct i2c_client *client,
+			 const struct i2c_device_id *id)
+{
+	struct device *dev = &client->dev;
+	
+	int ret;
+	
+	dev_info(dev, "Start nvp6324 probe...\n");
+	
+	memset(&nvp6324_data, 0, sizeof(nvp6324_data));
+	nvp6324_data.sen.i2c_client = client;
+	nvp6324_data.sen.on = true;
+	nvp6324_data.sen.csi = 0;
+	nvp6324_data.sen.mipi_camera = 1;
+	
+
+	nvp6324_data.sen.sensor_clk = devm_clk_get(dev, "csi_mclk");
+	if (IS_ERR(nvp6324_data.sen.sensor_clk)) {
+		nvp6324_data.sen.sensor_clk = NULL;
+		dev_err(dev, "clock-frequency missing or invalid\n");
+		return PTR_ERR(nvp6324_data.sen.sensor_clk);
+	}
+
+	ret = of_property_read_u32(dev->of_node, "mclk",
+				   &(nvp6324_data.sen.mclk));
+	if (ret) {
+		dev_err(dev, "mclk missing or invalid\n");
+		return ret;
+	}
+    dev_info(&nvp6324_data.sen.i2c_client->dev, "nvp6324_data.sen.mclk=%d from devicetree.\n", nvp6324_data.sen.mclk);
+
+	ret = of_property_read_u32(dev->of_node, "mclk_source",
+				   (u32*)&(nvp6324_data.sen.mclk_source));
+	if (ret) {
+		dev_err(dev, "mclk_source missing or invalid\n");
+		return ret;
+	}
+	
+	pr_info("Nvp6324 check ipu\n");
+    	ret = of_property_read_u32(dev->of_node, "ipu_id", &nvp6324_data.sen.ipu_id);
+	if (ret) {
+		dev_err(dev, "ipu_id missing or invalid\n");
+		return ret;
+	}
+    	else dev_info(&nvp6324_data.sen.i2c_client->dev, "Read ipu_id=%d from devicetree.\n", nvp6324_data.sen.ipu_id);
+
+	pr_info("Nvp6324 check csi\n");
+    	ret = of_property_read_u32(dev->of_node, "csi_id", &nvp6324_data.sen.csi);
+	if (ret) {
+		dev_err(dev, "csi id missing or invalid\n");
+		return ret;
+	}
+    	else dev_info(&nvp6324_data.sen.i2c_client->dev, "Read csi_id=%d from devicetree.\n", nvp6324_data.sen.csi);
+
+	clk_prepare_enable(nvp6324_data.sen.sensor_clk);
+	
+	nvp6324_write_reg(0xFF, 0x00);
+	
+	int rev = nvp6324_read_reg(0xf4);
+	
+	if(rev != 0xB0){
+	  dev_info(dev, "nvp6324 not found! error!", client->addr);
+	  return -1;
+	}
+	
+	dev_info(dev, "nvp6324 found, address: 0x%02x, chip id: 0xb0", client->addr);	
+	
+	nvp6324_int_device.priv = &nvp6324_data;
+	
+	nvp6324_video_init();
+	
+	ret = v4l2_int_device_register(&nvp6324_int_device);
+	pr_debug("   v4l2 device created, status is %d\n", ret);
+	
+	pr_debug("%s: init done, ret=%d\n", __func__,ret);
+    clk_disable_unprepare(nvp6324_data.sen.sensor_clk);
+
+	return 0;
+}
+
+static int nvp6324_remove(struct i2c_client *client)
+{	
+	void *mipi_csi2_info;
+
+	dev_dbg(&nvp6324_data.sen.i2c_client->dev,
+		"%s:Removing %s video decoder @ 0x%02X from adapter %s\n",
+		__func__, "nvp6324", client->addr << 1, client->adapter->name);
+	
+	v4l2_int_device_unregister(&nvp6324_int_device);
+	
+ 	/* disable mipi csi2 */
+    	mipi_csi2_info = mipi_csi2_get_info();
+    	if (mipi_csi2_info)
+        if (mipi_csi2_get_status(mipi_csi2_info)){
+            mipi_csi2_disable(mipi_csi2_info);
+	    pr_info("mipi csi2 disabled\n");	
+	}	
+
+	
+
+	return 0;
+}
 
