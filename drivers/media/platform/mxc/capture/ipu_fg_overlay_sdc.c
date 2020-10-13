@@ -119,8 +119,15 @@ static void get_disp_ipu(cam_data *cam)
 static irqreturn_t csi_enc_callback(int irq, void *dev_id)
 {
 	cam_data *cam = (cam_data *) dev_id;
+	ipu_channel_t csi_channel;
+ 
+	if (cam->csi == 1)
+		csi_channel = CSI_MEM1;
+	else
+		csi_channel = CSI_MEM0;
 
-	ipu_select_buffer(cam->ipu, CSI_MEM, IPU_OUTPUT_BUFFER, csi_buffer_num);
+	ipu_select_buffer(cam->ipu, csi_channel, IPU_OUTPUT_BUFFER, csi_buffer_num);
+
 	if ((cam->crop_current.width != cam->win.w.width) ||
 		(cam->crop_current.height != cam->win.w.height) ||
 		(vf_out_format != IPU_PIX_FMT_NV12) ||
@@ -134,6 +141,7 @@ static int csi_enc_setup(cam_data *cam)
 {
 	ipu_channel_params_t params;
 	int err = 0, sensor_protocol = 0;
+    ipu_channel_t csi_channel;
 
 	CAMERA_TRACE("In csi_enc_setup\n");
 	if (!cam) {
@@ -143,6 +151,10 @@ static int csi_enc_setup(cam_data *cam)
 
 	memset(&params, 0, sizeof(ipu_channel_params_t));
 	params.csi_mem.csi = cam->csi;
+    if (cam->csi == 1)
+		csi_channel = CSI_MEM1;
+	else
+		csi_channel = CSI_MEM0;
 
 	sensor_protocol = ipu_csi_get_sensor_protocol(cam->ipu, cam->csi);
 	switch (sensor_protocol) {
@@ -204,7 +216,7 @@ static int csi_enc_setup(cam_data *cam)
 	}
 	pr_debug("vf_bufs %x %x\n", cam->vf_bufs[0], cam->vf_bufs[1]);
 
-	err = ipu_channel_request(cam->ipu, CSI_MEM, &params, &cam->ipu_chan);
+	err = ipu_channel_request(cam->ipu, csi_channel, &params, &cam->ipu_chan);
 	if (err) {
 		pr_err("%s:ipu_channel_request %d\n", __func__, err);
 		goto out_1;
@@ -214,7 +226,7 @@ static int csi_enc_setup(cam_data *cam)
 		(cam->crop_current.height == cam->win.w.height) &&
 		(vf_out_format == IPU_PIX_FMT_NV12) &&
 		(cam->rotation < IPU_ROTATE_VERT_FLIP)) {
-		err = ipu_init_channel_buffer(cam->ipu, CSI_MEM,
+		err = ipu_init_channel_buffer(cam->ipu, csi_channel,
 			IPU_OUTPUT_BUFFER,
 			IPU_PIX_FMT_NV12,
 			cam->crop_current.width,
@@ -225,7 +237,7 @@ static int csi_enc_setup(cam_data *cam)
 			fbi->fix.smem_start, 0,
 			cam->offset.u_offset, cam->offset.u_offset);
 	} else {
-		err = ipu_init_channel_buffer(cam->ipu, CSI_MEM,
+		err = ipu_init_channel_buffer(cam->ipu, csi_channel,
 			IPU_OUTPUT_BUFFER,
 			IPU_PIX_FMT_NV12,
 			cam->crop_current.width,
@@ -238,7 +250,7 @@ static int csi_enc_setup(cam_data *cam)
 		printk(KERN_ERR "CSI_MEM output buffer\n");
 		goto out_1;
 	}
-	err = ipu_enable_channel(cam->ipu, CSI_MEM);
+	err = ipu_enable_channel(cam->ipu, csi_channel);
 	if (err < 0) {
 		printk(KERN_ERR "ipu_enable_channel CSI_MEM\n");
 		goto out_1;
@@ -246,8 +258,8 @@ static int csi_enc_setup(cam_data *cam)
 
 	csi_buffer_num = 0;
 
-	ipu_select_buffer(cam->ipu, CSI_MEM, IPU_OUTPUT_BUFFER, 0);
-	ipu_select_buffer(cam->ipu, CSI_MEM, IPU_OUTPUT_BUFFER, 1);
+	ipu_select_buffer(cam->ipu, csi_channel, IPU_OUTPUT_BUFFER, 0);
+	ipu_select_buffer(cam->ipu, csi_channel, IPU_OUTPUT_BUFFER, 1);
 	return err;
 out_1:
 	if (cam->vf_bufs_vaddr[0]) {
@@ -278,13 +290,19 @@ static int csi_enc_enabling_tasks(void *private)
 {
 	cam_data *cam = (cam_data *) private;
 	int err = 0;
+    uint32_t irq;
 	CAMERA_TRACE("IPU:In csi_enc_enabling_tasks\n");
 
-	ipu_clear_irq(cam->ipu, IPU_IRQ_CSI0_OUT_EOF);
-	err = ipu_request_irq(cam->ipu, IPU_IRQ_CSI0_OUT_EOF,
+	if (cam->csi == 1)
+		irq = IPU_IRQ_CSI1_OUT_EOF;
+	else
+		irq = IPU_IRQ_CSI0_OUT_EOF;
+
+	ipu_clear_irq(cam->ipu, irq);
+	err = ipu_request_irq(cam->ipu, irq,
 			      csi_enc_callback, 0, "Mxc Camera", cam);
 	if (err != 0) {
-		printk(KERN_ERR "Error registering CSI0_OUT_EOF irq\n");
+		printk(KERN_ERR "Error registering CSI_OUT_EOF irq\n");
 		return err;
 	}
 
@@ -298,7 +316,7 @@ static int csi_enc_enabling_tasks(void *private)
 
 	return err;
 out1:
-	ipu_free_irq(cam->ipu, IPU_IRQ_CSI0_OUT_EOF, cam);
+	ipu_free_irq(cam->ipu, irq, cam);
 	return err;
 }
 

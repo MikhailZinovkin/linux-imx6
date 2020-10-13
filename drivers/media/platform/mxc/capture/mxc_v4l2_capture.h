@@ -186,7 +186,7 @@ typedef struct _cam_data {
 	struct v4l2_rect crop_defrect;
 	struct v4l2_rect crop_current;
 
-	int (*enc_update_eba) (struct ipu_soc *ipu, dma_addr_t eba,
+	int (*enc_update_eba) (void *private, struct ipu_soc *ipu, dma_addr_t eba,
 			       int *bufferNum);
 	int (*enc_enable) (void *private);
 	int (*enc_disable) (void *private);
@@ -217,6 +217,7 @@ typedef struct _cam_data {
 	unsigned int csi;
     unsigned int mipi_v_channel;
 	unsigned mipi_camera; //==bool is_mipi_cam;
+    bool is_mipi_cam_interlaced;
 	int csi_in_use;
 	u8 mclk_source;
 	bool mclk_on[2];	/* two mclk sources at most now */
@@ -272,7 +273,8 @@ struct sensor_data {
 	int csi;
 	int last_reg;
 	unsigned mipi_camera; //==bool is_mipi;
-	unsigned virtual_channel;	/* Used with mipi */
+	unsigned virtual_channel;	/* Used with mipi */ //==int v_channel
+	bool is_mipi_interlaced;
 
 	void (*io_init)(void);
 };
@@ -299,7 +301,7 @@ static inline int cam_ipu_disable_csi(cam_data *cam)
 
 static inline int cam_mipi_csi2_enable(cam_data *cam, struct mipi_fields *mf)
 {
-#ifdef CONFIG_MXC_MIPI_CSI2
+#if 1 //def CONFIG_MXC_MIPI_CSI2
 	void *mipi_csi2_info;
 	struct sensor_data *sensor;
 
@@ -320,7 +322,7 @@ static inline int cam_mipi_csi2_enable(cam_data *cam, struct mipi_fields *mf)
 	}
 	if (mipi_csi2_get_status(mipi_csi2_info)) {
 		mf->en = true;
-		mf->vc = sensor->virtual_channel;
+		mf->vc = cam->mipi_v_channel; //sensor->virtual_channel; //
 		mf->id = mipi_csi2_get_datatype(mipi_csi2_info , mf->vc);
 		if (!mipi_csi2_pixelclk_enable(mipi_csi2_info))
 			cam->mipi_pixelclk_enabled = 1;
@@ -335,7 +337,7 @@ static inline int cam_mipi_csi2_enable(cam_data *cam, struct mipi_fields *mf)
 
 static inline int cam_mipi_csi2_disable(cam_data *cam)
 {
-#ifdef CONFIG_MXC_MIPI_CSI2
+#if 1 //def CONFIG_MXC_MIPI_CSI2
 	void *mipi_csi2_info;
 
 	if (!cam->mipi_pixelclk_enabled)
