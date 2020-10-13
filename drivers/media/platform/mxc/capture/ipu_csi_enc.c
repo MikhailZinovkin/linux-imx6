@@ -133,6 +133,9 @@ static int csi_enc_setup(cam_data *cam)
 	if (err)
 		return err;
 
+    if (cam->mipi_camera && cam->is_mipi_cam_interlaced)
+        params.csi_mem.interlaced = true;
+
 	err = ipu_channel_request(cam->ipu, csi_channel, &params, &cam->ipu_chan);
 	if (err) {
 		pr_err("%s:ipu_channel_request %d\n", __func__, err);

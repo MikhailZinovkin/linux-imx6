@@ -45,7 +45,9 @@
 
 #define SENSOR_NUM 1 //4
 unsigned int g_isl79985_width = 720;
-unsigned int g_isl79985_height = 240;
+unsigned int g_isl79985_height = 576; //240; //480; //240;
+//unsigned int g_isl7998x_field_height = 240;
+//unsigned int g_isl7998x_frame_height = 480;
 
 /*!
  * Maintains the information on the current state of the sesor.
@@ -59,8 +61,8 @@ static int nvp6324_remove(struct i2c_client *client);
 static int ioctl_dev_init(struct v4l2_int_device *s);
 
 #if 0
-static const struct i2c_device_id isl79985_id[] = {
-	{"isl79985_mipi", 0},
+static const struct i2c_device_id nvp6324_id[] = {
+	{"nvp6324_mipi", 0},
 	{},
 };
 #endif
@@ -1918,6 +1920,7 @@ int nvp6324_video_init(void)
 #else
           nvp6324_data.sen.pix.width = g_isl79985_width;
 	      nvp6324_data.sen.pix.height = g_isl79985_height;
+          nvp6324_data.sen.is_mipi_interlaced = 1;
           nvp6324_data.sen.streamcap.capturemode = 0;
           nvp6324_data.sen.streamcap.timeperframe.denominator = 25;
           nvp6324_data.sen.streamcap.timeperframe.numerator = 1;
