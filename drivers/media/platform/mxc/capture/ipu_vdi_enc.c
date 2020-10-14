@@ -204,6 +204,7 @@ static int vdi_enc_setup(cam_data *cam)
             case IPU_CSI_CLK_MODE_CCIR656_INTERLACED:
             case IPU_CSI_CLK_MODE_CCIR1120_INTERLACED_DDR:
             case IPU_CSI_CLK_MODE_CCIR1120_INTERLACED_SDR:
+            case IPU_CSI_CLK_MODE_GATED_CLK:
                 csi.csi_mem.interlaced = true;
                 break;
             default:
