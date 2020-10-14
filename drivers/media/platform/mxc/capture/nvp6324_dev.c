@@ -45,7 +45,7 @@
 
 #define SENSOR_NUM 1 //4
 
-#define __IS_FRAME_MODE_TVIN 1 //у нас field mode
+#define __IS_FRAME_MODE_TVIN 0 //у нас field mode
 
 
 // isl79985->  CHIP_ID_79985 -> field mode (have short packets) -> IDMAC in progressive mode
